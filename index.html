@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>My first three.js app</title>
+		<style>
+			body { margin: 0; }
+			canvas { width: 100%; height: 100% }
+		</style>
+	</head>
+	<body>
+		<script src="js/three.min.js"></script>
+		<script src="js/trackball_controls.three.js"></script>
+		<script src="js/geojson2three.js"></script>
+		<script src="js/environ.js"></script>
+		<script>
+		    var g2t;
+		    function lerpColor(a, b, amount) { 
+
+                var ah = parseInt(a.replace(/#/g, ''), 16),
+                    ar = ah >> 16, ag = ah >> 8 & 0xff, ab = ah & 0xff,
+                    bh = parseInt(b.replace(/#/g, ''), 16),
+                    br = bh >> 16, bg = bh >> 8 & 0xff, bb = bh & 0xff,
+                    rr = ar + amount * (br - ar),
+                    rg = ag + amount * (bg - ag),
+                    rb = ab + amount * (bb - ab);
+
+                return '#' + ((1 << 24) + (rr << 16) + (rg << 8) + rb | 0).toString(16).slice(1);
+            }
+            
+            files = [
+                "contours_2019-1-1.geojson",
+                "contours_2019-1-2.geojson",
+                "contours_2019-1-3.geojson",
+                "contours_2019-1-4.geojson",
+                "contours_2019-1-5.geojson",
+                "contours_2019-1-6.geojson",
+                "contours_2019-1-7.geojson"
+            ];
+            
+		    function request (URL, callback) {
+		        var ajax = new XMLHttpRequest();
+                ajax.open("GET", URL, true);
+                ajax.onreadystatechange = function () {
+		            if (this.readyState === 4) {
+		                if (this.status === 200) {
+                            callback(JSON.parse(this.response));
+		                 } else {
+		                    console.log('error while fetchign json data');
+		                 }
+		            }
+		        }
+                ajax.send();    
+		    }
+		    
+		    // request('data/municipis.geojson', function (geojson) {
+		    //     g2t = new Geojson2Three(scene, geojson);
+            //     g2t.draw(function (feature) {
+            //         return 0;
+            //      }, {
+            //         color: 0xffffff
+            //     });
+            //     render();
+            //     animate();
+		    // });
+		    var i = 0, URL;
+            var interval = setInterval(function () {
+                URL = 'data/'+files[i%files.length];
+		        request(URL, function (geojson) {
+		            if (g2t) {
+		                g2t.clear();
+		            }
+		            g2t = new Geojson2Three(scene, geojson, 3);
+                    g2t.draw(function (feature) {
+                        return feature.properties.icqa * 3;
+                     }, {
+                        color: function (feat) {
+                            return lerpColor('#4affc3', '#ff4891', feat.properties.icqa/100);
+                        }
+                    });
+                    render();
+                    animate();
+		        });
+		        i++;
+            }, 2000);
+            
+            function stopInterval () {
+                clearInterval(interval);
+            }
+		    
+		    // var ajax = new XMLHttpRequest();
+		    // ajax.open("GET", "data/seros_pks.geojson", true);
+		    // ajax.onreadystatechange = function () {
+		    //     if (this.readyState === 4) {
+		    //         if (this.status === 200) {
+		    //             g2t = new Geojson2Three(scene, JSON.parse(this.response));
+		    //             g2t.draw(function (feature) {
+		    //                 return feature.properties.alt_0 * 100;
+            //              }, {
+		    //                 color: 0xff0000
+		    //             });
+		    //             render();
+		    //             animate();
+		    //          } else {
+		    //             console.log('error while fetchign json data');
+		    //          }
+		    //     }
+		    // }
+		    // ajax.send();
+		</script>
+	</body>
+</html>
