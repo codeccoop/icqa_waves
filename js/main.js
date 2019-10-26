@@ -96,9 +96,22 @@ Geojson2Three.prototype.update = function (geojson, options) {
                 var line = this.Line(coordinates.map(function (coord) {
                     return self.project(coord, z_coordinate);
                 }), options, feat);
-                object.geometry = line.geometry;
+                // object.geometry = line.geometry;
+                for (let from, to, i=0, len=Math.max(line.geometry.vertices.length, object.geometry.vertices.length);i<len; i++) {
+                    from = object.geometry.vertices[i];
+                    to = line.geometry.vertices[i];
+                    if (from && to) {
+                        from.setX(to.x);
+                        from.setY(to.y);
+                        from.setZ(to.z);
+                    } else if (to) {
+                        object.geometry.vertices.push(to);
+                    } else {
+                        object.geometry.vertices.slice(i,1);
+                    }
+                }
                 object.geometry.verticesNeedUpdate = true;
-                object.material = line.material;
+                // object.material = line.material;
             } else if (geom.type == 'Polygon') {
                 for (var j=0; j<geom.coordinates.length; j++) {
                     coordinates = new Coordinates(geom.coordinates[j]);
@@ -210,7 +223,7 @@ Geojson2Three.prototype.draw = function (options) {
 
 Geojson2Three.prototype.project = function (coords, z_coordinate) {
     var projected = this.projection(coords);
-    return [this.scaleX(projected[0])*this.resolutionFactor, this.scaleY(projected[1])*this.resolutionFactor, z_coordinate || 0];
+    return [this.scaleX(projected[0])*this.resolutionFactor, this.scaleY(projected[1])*this.resolutionFactor, z_coordinate * this.resolutionFactor || 0];
 }
 
 Geojson2Three.prototype.Point = function (sc, options) {
@@ -294,12 +307,14 @@ Geojson2Three.prototype.Line = function (sc, options, feature) {
 }
 
 Geojson2Three.prototype.clear = function () {
+    const self = this;
     this.objects.map(function (obj) {
-        obj = this.scene.getObjectByName(obj.name);
+        obj = self.scene.getObjectByName(obj.name);
         obj.geometry.dispose();
         obj.material.dispose();
-        this.scene.remove(obj);
+        self.scene.remove(obj);
     });
+    this.objects = new Array();
     return this;
 };
 
