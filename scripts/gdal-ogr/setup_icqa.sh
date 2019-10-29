@@ -6,7 +6,12 @@ src_layer=$1
 dst_layer=$2
 z_field=$3
 clipped_layer="$(dirname "$dst_layer")/cliped_$(basename "$dst_layer")"
-contours_layer="$(dirname "$src_layer")/contours_"$z_field"_$(basename "$src_layer")"
+src_name="$(basename "$src_layer")"
+src_extension="${src_name##*.}"
+src_name="${src_name%.*}"
+contours_path="$(dirname "$src_layer")"
+contours_path="${contours_path/vector/contours}"
+contours_layer="$contours_path/contours_$(echo "$src_name")_$(echo "$z_field").$(echo "$src_extension")"
 
 run () {
 
@@ -29,7 +34,9 @@ run () {
 
 	echo
 	echo "removing temp files"
-	rm "$clipped_layer" || true
+	if [ -f "$clipped_layer" ]; then
+		rm "$clipped_layer" || true
+	fi
 
 	echo "Source layer:"
 	echo "  $src_layer"

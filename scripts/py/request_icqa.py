@@ -7,12 +7,12 @@ from time import sleep
 
 
 magnitudes = {
-    "SO2": 1,
-    "NO": 7,
-    "NO2": 8,
-    "NOx": 12,
-    "O3": 14,
-    "CO": 6,
+    # "SO2": 1,
+    # "NO": 7,
+    # "NO2": 8,
+    # "NOx": 12,
+    # "O3": 14,
+    # "CO": 6,
     "PM10": 10
 }
 
@@ -42,6 +42,10 @@ def request (magnitude, province, year, month, day):
     
 def write (magnitude, province, year, month, day, points):
     file_name = 'data'
+    if not exists(file_name):
+        makedirs(file_name)
+
+    file_name = file_name + '/vector'
     if not exists(file_name):
         makedirs(file_name)
     

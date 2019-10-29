@@ -1,4 +1,4 @@
-function Environ () {
+function Environ (options) {
     window.__animate = this.animate.bind(this);
     window.__render = this.render.bind(this);
     
@@ -8,13 +8,13 @@ function Environ () {
         45,
         window.innerWidth / window.innerHeight,
         0.5,
-        10000
+        50000
     );
-    this.camera.position.set(0, -2000, 3000);
     this.camera.lookAt(0, 0, 0);
+    this.camera.position.set(0, -6000, 2000);
     
     this.renderer = new THREE.WebGLRenderer();
-    this.renderer.setPixelRatio(window.devicePixelRatio);
+    this.renderer.setPixelRatio(window.devicePixelRatio*options.resolutionFactor);
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.setClearColor(0x1b1b33, 1);
     document.body.appendChild(this.renderer.domElement);

@@ -22,23 +22,23 @@ function BBox (features) {
                    this.update(coords);
                 }
             } else if (geom.type === "MultiLineString") {
-                for (let j=0;j>geom.coordinates.length;j++) {
+                for (let j=0;j<geom.coordinates.length;j++) {
                     segment=geom.coordinates[j];
-                    for (let k=0;k>segment.length;k++) {
+                    for (let k=0;k<segment.length;k++) {
                         coords = segment[k];
                         this.update(coords);
                     }
                 }
             } else if (geom.type === "Polygon") {
-                for (let j=0;j>geom.coordinates.length;j++) {
+                for (let j=0;j<geom.coordinates.length;j++) {
                     segment=geom.coordinates[j];
-                    for (let k=0;k>segment.length;k++) {
+                    for (let k=0;k<segment.length;k++) {
                         coords = segment[k];
                         this.update(coords);
                     }
                 }
             } else if (geom.type === "MultiPolygon") {
-                for (let j=0;j>geom.coordinates.length;j++) {
+                for (let j=0; j<geom.coordinates.length; j++) {
                     polygon=geom.coordinates[j];
                     for (let k=0;k>polygon.length;k++) {
                         segment=polygon[k];

@@ -23,23 +23,23 @@ function BBox (features) {
                    this.update(coords);
                 }
             } else if (geom.type === "MultiLineString") {
-                for (let j=0;j>geom.coordinates.length;j++) {
+                for (let j=0;j<geom.coordinates.length;j++) {
                     segment=geom.coordinates[j];
-                    for (let k=0;k>segment.length;k++) {
+                    for (let k=0;k<segment.length;k++) {
                         coords = segment[k];
                         this.update(coords);
                     }
                 }
             } else if (geom.type === "Polygon") {
-                for (let j=0;j>geom.coordinates.length;j++) {
+                for (let j=0;j<geom.coordinates.length;j++) {
                     segment=geom.coordinates[j];
-                    for (let k=0;k>segment.length;k++) {
+                    for (let k=0;k<segment.length;k++) {
                         coords = segment[k];
                         this.update(coords);
                     }
                 }
             } else if (geom.type === "MultiPolygon") {
-                for (let j=0;j>geom.coordinates.length;j++) {
+                for (let j=0; j<geom.coordinates.length; j++) {
                     polygon=geom.coordinates[j];
                     for (let k=0;k>polygon.length;k++) {
                         segment=polygon[k];
@@ -152,7 +152,7 @@ Coordinates.prototype.getMidpoint = function (point1, point2) {
 
 module.exports = Coordinates;
 },{}],3:[function(require,module,exports){
-function Environ () {
+function Environ (options) {
     window.__animate = this.animate.bind(this);
     window.__render = this.render.bind(this);
     
@@ -162,13 +162,13 @@ function Environ () {
         45,
         window.innerWidth / window.innerHeight,
         0.5,
-        10000
+        50000
     );
-    this.camera.position.set(0, -2000, 3000);
     this.camera.lookAt(0, 0, 0);
+    this.camera.position.set(0, -6000, 2000);
     
     this.renderer = new THREE.WebGLRenderer();
-    this.renderer.setPixelRatio(window.devicePixelRatio);
+    this.renderer.setPixelRatio(window.devicePixelRatio*options.resolutionFactor);
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.setClearColor(0x1b1b33, 1);
     document.body.appendChild(this.renderer.domElement);
@@ -225,175 +225,11 @@ function Scale (range, domain) {
 
 module.exports = Scale;
 },{}],6:[function(require,module,exports){
-exports.request = function request (URL, callback) {
-    var ajax = new XMLHttpRequest();
-    ajax.open("GET", URL, true);
-    ajax.onreadystatechange = function () {
-        if (this.readyState === 4) {
-            if (this.status === 200) {
-                callback(JSON.parse(this.response));
-                } else {
-                console.log('error while fetchign json data');
-                }
-        }
-    }
-    ajax.send();    
-}
-
-exports.lerpColor = function lerpColor (a, b, amount) { 
-    var ah = parseInt(a.replace(/#/g, ''), 16),
-        ar = ah >> 16, ag = ah >> 8 & 0xff, ab = ah & 0xff,
-        bh = parseInt(b.replace(/#/g, ''), 16),
-        br = bh >> 16, bg = bh >> 8 & 0xff, bb = bh & 0xff,
-        rr = ar + amount * (br - ar),
-        rg = ag + amount * (bg - ag),
-        rb = ab + amount * (bb - ab);
-
-    return '#' + ((1 << 24) + (rr << 16) + (rg << 8) + rb | 0).toString(16).slice(1);
-}
-
-exports.uid = function uid () {
-    var chars = ["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz[]-_*+|/^'!¡?¿"],
-        charsLen = chars.length;
-    return Array.apply(null, Array(10)).map(function (a) {
-        return a + chars[Math.ceil(Math.random() * charsLen)]
-    }, new String());
-    
-}
-},{}],7:[function(require,module,exports){
-var Geojson2Three = require('./main');
-var Environ = require('./components/Environ');
-var { request, lerpColor } = require('./helpers');
-var Calendar = require('./views/calendar');
-
-function requestData (month, day) {
-    var url = `data/icqa/contours/10/8/contours_h${(String(day).length == 1 ? '0'+day : day)}_2019-${month}-1.geojson`;
-    request(url, function (geojson) {
-        if (g2t) {
-            g2t.data(geojson).draw({
-                color: function (feat) {
-                    return lerpColor('#4affc3', '#ff4891', feat.properties.icqa/80);
-                }
-            });
-            env.render();
-            env.animate();
-        } else {
-            g2t = new Geojson2Three(env.scene, {
-                resolutionFactor: 3,
-                zScale: function (feature) {
-                    return feature.properties.icqa * 2;
-                },
-                env: env
-            }).data(geojson)
-            .fitEnviron()
-            .draw({
-                color: function (feat) {
-                    return lerpColor('#4affc3', '#ff4891', feat.properties.icqa/70);
-                }
-            });
-            env.render();
-            env.animate();
-        }
-    });
-}
-
-var calendar = new Calendar(requestData);
-var env = new Environ();
-
-// var files = [
-//     "contours_2019-1-1.geojson",
-//     "contours_2019-1-2.geojson",
-//     "contours_2019-1-3.geojson",
-//     "contours_2019-1-4.geojson",
-//     "contours_2019-1-5.geojson",
-//     "contours_2019-1-6.geojson",
-//     "contours_2019-1-7.geojson"
-// ];
-request('data/icqa/contours/10/8/contours_2019-1-1.geojson', function (geojson) {
-    g2t = new Geojson2Three(env.scene, {
-        resolutionFactor: 3,
-        zScale: function (feature) {
-            return feature.properties.icqa * 2;
-        },
-        env: env
-    }).data(geojson)
-    .fitEnviron()
-    .draw({
-        color: function (feat) {
-            return lerpColor('#4affc3', '#ff4891', feat.properties.icqa/70);
-        }
-    });
-
-    env.render();
-    env.animate();
-});
-request('data/municipis.geojson', function (geojson) {
-    new Geojson2Three(env.scene, {
-        resolutionFactor: 2,
-        zScale: 0,
-        env: env
-    }).data(geojson)
-    .fitEnviron()
-    .draw({
-        color: 'white'
-    });
-    // g2t.draw(function (feature) {
-    //     return 0;
-    //  }, {
-    //     color: 0xffffff
-    // });
-    render();
-    animate();
-});
-
-// var i = 0, url, g2t;
-// var interval = setInterval(function () {
-//     url = 'data/icqa/contours/10/8/'+files[i%files.length];
-//     request(url, function (geojson) {
-//         if (g2t) {
-//             // g2t.update(geojson, {
-//             //     color: function (feat) {
-//             //         return lerpColor('#4affc3', '#ff4891', feat.properties.icqa/70);
-//             //     }
-//             // });
-//             g2t.data(geojson).draw({
-//                 color: function (feat) {
-//                     return lerpColor('#4affc3', '#ff4891', feat.properties.icqa/80);
-//                 }
-//             });
-//             env.render();
-//             env.animate();
-//         } else {
-//             g2t = new Geojson2Three(env.scene, {
-//                 resolutionFactor: 3,
-//                 zScale: function (feature) {
-//                     return feature.properties.icqa * 2;
-//                 },
-//                 env: env
-//             }).data(geojson)
-//             .fitEnviron()
-//             .draw({
-//                 color: function (feat) {
-//                     return lerpColor('#4affc3', '#ff4891', feat.properties.icqa/70);
-//                 }
-//             });
-
-//             env.render();
-//             env.animate();
-//         }
-//     });
-    // i++;
-// }, 1000);
-
-// function stopInterval () {
-//     clearInterval(interval);
-// }
-},{"./components/Environ":3,"./helpers":6,"./main":8,"./views/calendar":9}],8:[function(require,module,exports){
-var Scale = require('./components/Scale');
-var Projection = require('./components/Projection');
-var BBox = require('./components/BBox');
-var Coordinates = require('./components/Coordinates');
-var { uid } = require('./helpers');
+var Scale = require('./components/Scale.js');
+var Projection = require('./components/Projection.js');
+var BBox = require('./components/BBox.js');
+var Coordinates = require('./components/Coordinates.js');
+var { uid } = require('../helpers.js');
 
 function Geojson2Three (scene, options) {
     if (!scene) {
@@ -415,6 +251,7 @@ Geojson2Three.prototype.fitEnviron = function () {
     if (!this.srcData) throw new Error("You must bind data before");
     this.offset = window.innerWidth > window.innerHeight ? window.innerHeight : window.innerWidth;
     this.bbox = new BBox(this.srcData).get();
+    console.log(this.bbox);
     this.projection = Projection(this.offset);
     this.scaleX = Scale([0, this.offset], this.projection([this.bbox.SW[0], this.bbox.NE[0]]));
     this.scaleY = Scale([0, this.offset], this.projection([this.bbox.SW[1], this.bbox.NE[1]]));
@@ -506,11 +343,11 @@ Geojson2Three.prototype.update = function (geojson, options) {
             } else if (geom.type == 'Polygon') {
                 for (var j=0; j<geom.coordinates.length; j++) {
                     coordinates = new Coordinates(geom.coordinates[j]);
-                    var line = this.Line(coordinates.map(function (coord) {
+                    var polygon = this.Polygon(coordinates.map(function (coord) {
                         return self.project(coord, z_coordinate);
                     }), options, feat);
-                    object.geometry = line.geometry;
-                    object.material = line.material;
+                    object.geometry = polygon.geometry;
+                    object.material = polygon.material;
                 }
             } else if (geom.type == 'MultiLineString') {
                 for (var j=0; j<geom.coordinates.length; j++) {
@@ -538,8 +375,6 @@ Geojson2Three.prototype.update = function (geojson, options) {
                 throw new Error('The geoJSON is not valid.');
             }
         }
-
-        // this.env.render();
     }
 }
 
@@ -577,11 +412,11 @@ Geojson2Three.prototype.draw = function (options) {
         } else if (geom.type == 'Polygon') {
             for (var j=0; j<geom.coordinates.length; j++) {
                 coordinates = new Coordinates(geom.coordinates[j]);
-                var line = this.Line(coordinates.map(function (coord) {
+                var polygon = this.Polygon(coordinates.map(function (coord) {
                     return self.project(coord, z_coordinate);
                 }), options, feat);
-                this.objects.push(line);
-                line.draw();
+                this.objects.push(polygon);
+                polygon.draw();
             }
         } else if (geom.type == 'MultiLineString') {
             for (var j=0; j<geom.coordinates.length; j++) {
@@ -593,16 +428,16 @@ Geojson2Three.prototype.draw = function (options) {
                 line.draw();
             }
         } else if (geom.type == 'MultiPolygon') {
-            for (var j=0; i<geom.coordinates.length; j++) {
+            for (var j=0; j<geom.coordinates.length; j++) {
                 polygon = geom.coordinates[j];
                 for (var k=0; k<polygon.length; k++) {
                     segment = polygon[k];
                     coordinates = new Coordinates(segment);
-                    var line = this.Line(coordinates.map(function (coord) {
+                    var polygon = this.Polygon(coordinates.map(function (coord) {
                         return self.project(coord, z_coordinate);
                     }), options, feat);
-                    this.objects.push(line);
-                    line.draw();
+                    this.objects.push(polygon);
+                    polygon.draw();
                 }
             }
         } else {
@@ -656,6 +491,36 @@ Geojson2Three.prototype.Geom = function (sc, name) {
     return geom;
 }
 
+Geojson2Three.prototype.Shape = function (sc, name) {
+    var shape = new THREE.Shape();
+    sc.map(function (coord, i) {
+        if (i == 0) {
+            shape.moveTo(coord[0], coord[1]);
+        } else {
+            shape.lineTo(coord[0], coord[1]);
+        }
+    });
+
+    var geometry = new THREE.ShapeGeometry(shape);
+    geometry.name = name || uid();
+    return geometry;
+}
+
+Geojson2Three.prototype.Edges = function (sc, name) {
+    var shape = new THREE.Shape();
+    sc.map(function (coord, i) {
+        if (i == 0) {
+            shape.moveTo(coord[0], coord[1]);
+        } else {
+            shape.lineTo(coord[0], coord[1]);
+        }
+    });
+
+    var geometry = new THREE.EdgesGeometry(new THREE.ShapeGeometry(shape));
+    geometry.name = name || uid();
+    return geometry;
+}
+
 Geojson2Three.prototype.PointMaterial = function (options, feature, name) {
     options = Object.keys(options).reduce(function (a, k) {
         a[k] = typeof options[k] === "function" ? options[k](feature) : options[k];
@@ -678,13 +543,22 @@ Geojson2Three.prototype.LineMaterial = function (options, feature, name) {
     return material;
 }
 
+Geojson2Three.prototype.BasicMaterial = function (options, feature, name) {
+    options = Object.keys(options).reduce(function (a, k) {
+        a[k] = typeof options[k] === "function" ? options[k](feature) : options[k];
+        return a;
+    }, new Object());
+
+    var material = new THREE.MeshBasicMaterial(options);
+    material.name = name || uid();
+    return material;
+}
+
 Geojson2Three.prototype.Line = function (sc, options, feature) {
     var name = uid();
     var line_geom = this.Geom(sc, name);
-    line_geom.name = name;
     
     var line_material = this.LineMaterial(options, feature, name);
-    line_material.name = name;
     
     var line = new THREE.Line(line_geom, line_material);
     line.name = name;
@@ -695,6 +569,25 @@ Geojson2Three.prototype.Line = function (sc, options, feature) {
     }
 
     return line;
+}
+
+Geojson2Three.prototype.Polygon = function (sc, options, feature) {
+    var name = uid();
+    var polygon_geom = this.Shape(sc, name);
+    var edges_geom = this.Edges(sc, name);
+
+    var polygon_material = this.BasicMaterial(options, feature, name);
+    var edges_material = this.LineMaterial({color: 0xcccccc, linewidth: 1, linecap: 'round', linejoin:  'round'}, feature, name);
+    var polygon = new THREE.Mesh(polygon_geom, polygon_material);
+    var edges = new THREE.LineSegments(edges_geom, edges_material);
+
+    var self = this;
+    polygon.draw = function () {
+        self.scene.add(polygon);
+        self.scene.add(edges);
+    }
+
+    return polygon;
 }
 
 Geojson2Three.prototype.clear = function () {
@@ -710,42 +603,536 @@ Geojson2Three.prototype.clear = function () {
 };
 
 module.exports = Geojson2Three;
-},{"./components/BBox":1,"./components/Coordinates":2,"./components/Projection":4,"./components/Scale":5,"./helpers":6}],9:[function(require,module,exports){
-module.exports = function Calendar (onClick) {
-    this.el = document.getElementById('calendar');
-    this.el.innerHTML = '<table class="calendar"></table>'
-    var months = Array.apply(null, Array(10)).map((d, i) => i+1);
-    var days = Array.apply(null, Array(31)).map((d, i) => i+1);
-    var calendarBody = this.el.children[0];
-
-    var weeks = new Array();
-    days.reduce((a,d,i) => {
-        if (i % 7 != 0) {
-            a.push(i+1);
-        } else {
-            weeks.push(a);
-            a = new Array();
-            a.push(i+1);
+},{"../helpers.js":7,"./components/BBox.js":1,"./components/Coordinates.js":2,"./components/Projection.js":4,"./components/Scale.js":5}],7:[function(require,module,exports){
+exports.request = function request (URL, callback) {
+    var ajax = new XMLHttpRequest();
+    ajax.open("GET", URL, true);
+    ajax.onreadystatechange = function () {
+        if (this.readyState === 4) {
+            if (this.status === 200) {
+                callback(JSON.parse(this.response));
+                } else {
+                console.log('error while fetchign json data');
+                }
         }
-        return a;
-    }, new Array());
+    }
+    ajax.send();    
+}
 
-    console.log(weeks);
+exports.lerpColor = function lerpColor (a, b, amount) { 
+    var ah = parseInt(a.replace(/#/g, ''), 16),
+        ar = ah >> 16, ag = ah >> 8 & 0xff, ab = ah & 0xff,
+        bh = parseInt(b.replace(/#/g, ''), 16),
+        br = bh >> 16, bg = bh >> 8 & 0xff, bb = bh & 0xff,
+        rr = ar + amount * (br - ar),
+        rg = ag + amount * (bg - ag),
+        rb = ab + amount * (bb - ab);
+
+    return '#' + ((1 << 24) + (rr << 16) + (rg << 8) + rb | 0).toString(16).slice(1);
+}
+
+exports.uid = function uid () {
+    var chars = ["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz[]-_*+|/^'!¡?¿"],
+        charsLen = chars.length;
+    return Array.apply(null, Array(10)).map(function (a) {
+        return a + chars[Math.ceil(Math.random() * charsLen)]
+    }, new String());
     
-    months.map(month => {
-        var monthHeader = document.createElement('tr');
-        monthHeader.innerHTML = '<th>'+month+'</th>';
-        calendarBody.appendChild(monthHeader);
-        weeks.map(week => {
-            var weekRow = document.createElement('tr');
-            week.map(day => {
-                var dayData = document.createElement('td');
-                dayData.addEventListener('click', () => onClick(month, day));
-                dayData.innerHTML = day;
-                weekRow.appendChild(dayData);
+}
+},{}],8:[function(require,module,exports){
+var Geojson2Three = require('./geojson2three/main.js');
+var Environ = require('./geojson2three/components/Environ.js');
+var { request, lerpColor } = require('./helpers.js');
+var DateTime = require('./views/datetime.js');
+
+
+var g2t;
+function requestData (year, month, day, hour) {
+    var url = `data/contours/10/8/contours_${year}-${month}-${day}_${hour}.geojson`;
+    return request(url, function (geojson) {
+        if (g2t) {
+            g2t.data(geojson).draw({
+                color: function (feat) {
+                    return lerpColor('#4affc3', '#ff4891', feat.properties.icqa/200);
+                },
+                linewidth: 1,
+                linecap: 'round',
+                linejoin:  'round'
             });
-            calendarBody.appendChild(weekRow);
-        });
+            env.render();
+            env.animate();
+        } else {
+            g2t = new Geojson2Three(env.scene, {
+                resolutionFactor: 5,
+                zScale: function (feature) {
+                    return feature.properties.icqa * 2;
+                },
+                env: env
+            }).data(geojson)
+            .fitEnviron()
+            .draw({
+                color: function (feat) {
+                    return lerpColor('#4affc3', '#ff4891', feat.properties.icqa/200);
+                },
+                linewidth: 1,
+                linecap: 'round',
+                linejoin:  'round'
+            });
+            env.render();
+            env.animate();
+        }
     });
 }
-},{}]},{},[7]);
+
+var dateTime = new DateTime(requestData);
+var env = new Environ({resolutionFactor: 5});
+
+requestData(2019, 1, 1, 'h01');
+request('data/municipis.geojson', function (geojson) {
+    new Geojson2Three(env.scene, {
+        resolutionFactor: 5,
+        zScale: 0,
+        env: env
+    }).data(geojson)
+    .fitEnviron()
+    .draw({
+        color: 0xffffff,
+        transparent: true,
+        opacity: .0
+    });
+    // g2t.draw(function (feature) {
+    //     return 0;
+    //  }, {
+    //     color: 0xffffff
+    // });
+    env.render();
+    env.animate();
+    // dateTime.start();
+});
+
+// var i = 0, url, g2t;
+// var interval = setInterval(function () {
+//     url = 'data/icqa/contours/10/8/'+files[i%files.length];
+//     request(url, function (geojson) {
+//         if (g2t) {
+//             // g2t.update(geojson, {
+//             //     color: function (feat) {
+//             //         return lerpColor('#4affc3', '#ff4891', feat.properties.icqa/70);
+//             //     }
+//             // });
+//             g2t.data(geojson).draw({
+//                 color: function (feat) {
+//                     return lerpColor('#4affc3', '#ff4891', feat.properties.icqa/80);
+//                 }
+//             });
+//             env.render();
+//             env.animate();
+//         } else {
+//             g2t = new Geojson2Three(env.scene, {
+//                 resolutionFactor: 5,
+//                 zScale: function (feature) {
+//                     return feature.properties.icqa * 2;
+//                 },
+//                 env: env
+//             }).data(geojson)
+//             .fitEnviron()
+//             .draw({
+//                 color: function (feat) {
+//                     return lerpColor('#4affc3', '#ff4891', feat.properties.icqa/70);
+//                 }
+//             });
+
+//             env.render();
+//             env.animate();
+//         }
+//     });
+    // i++;
+// }, 1000);
+
+// function stopInterval () {
+//     clearInterval(interval);
+// }
+},{"./geojson2three/components/Environ.js":3,"./geojson2three/main.js":6,"./helpers.js":7,"./views/datetime.js":12}],9:[function(require,module,exports){
+module.exports = (function () {
+    
+    var _calendar,
+        _year,
+        _state = {year: 2019, month: 0, day: 1};
+
+    Object.freeze(_state);
+
+        
+    var month,
+        date,
+        day,
+        weekArray = new Array(),
+        monthArray = new Array();
+
+    _calendar = Array.apply(null, Array(365)).reduce(function (acum, d, i) {
+        date = new Date("2019");
+        date.setDate(i+1);
+        if ((month || 0) != date.getMonth()) {
+            monthArray.push(weekArray);
+            weekArray = new Array();
+            acum.push(monthArray);
+            monthArray = new Array();
+        }
+        day = date.getDay();
+        weekArray.push(date.getDate());
+        if (day == 0) {
+            monthArray.push(weekArray);
+            weekArray = new Array();
+        }
+        month = date.getMonth();
+        return acum;
+    }, new Array());
+    Object.freeze(_calendar);
+
+    _year = _calendar.reduce(function (acum, month) {
+        acum.push(month.reduce(function (acum, week) {
+            week.map(function (day) {
+                acum.push(day);
+            });
+            return acum;
+        }, new Array()));
+        return acum;
+    }, new Array());
+    Object.freeze(_year);
+
+    var dates = (function () {
+        var day, month, year;
+        return (function* () {
+            while (true) {
+                day = _state.day + 1;
+                month = _state.month;
+                year = _state.year;
+                
+                if (day == _year[month].length) {
+                    day = 0;
+                    month++;
+                }
+
+                if (month == 12) {
+                    month = 0;
+                    year++;
+                }
+
+                date = {
+                    year: year,
+                    month: month,
+                    day: day
+                }
+
+                yield date;
+            }
+        })();
+    })();
+
+    function Calendar () {
+        Object.defineProperty(this, 'date', {
+            set: function (val) {
+                _state = Object.keys(val).reduce(function (acum, key) {
+                    acum[key] = val[key] || _state[key];
+                    return acum;
+                }, new Object());
+                Object.freeze(_state);
+            },
+            get: function () {
+                return _state;
+            }
+        })
+    }
+
+    Calendar.prototype.getYear = function getMatrix () {
+        return _year;
+    }
+    
+    Calendar.prototype.getCalendar = function getWeeked () {
+        return _calendar;
+    }
+
+    Calendar.prototype.getMonth = function getMonth () {
+        return _year[this.date.month];
+    }
+
+    Calendar.prototype.next = function next () {
+        _state = dates.next().value;
+        Object.freeze(_state);
+        return _state;
+    }
+
+    return Calendar;
+})();
+},{}],10:[function(require,module,exports){
+module.exports = (function () {
+
+    var _hour = 0;
+    var hours = (function () {
+        return (function* () {
+            while (true) {
+                yield (_hour + 1)%24;
+            }
+        })();
+    })();
+
+    function format (hour) {
+        return 'h' + (String(hour).length == 1 ? '0'+hour : hour);
+    }
+
+    function TimeLine () {
+        Object.defineProperty(this, 'hour', {
+            get: function () {
+                return format(_hour+1);
+            },
+            set: function (val) {
+                _hour = val-1;
+            }
+        });
+    }
+
+    TimeLine.prototype.next = function next () {
+        _hour = hours.next().value;
+        return format(_hour+1);
+    }
+
+    TimeLine.prototype.getHours = function getHours () {
+        return Array.apply(null, Array(24)).map(function (d,i) {
+            return i+1;
+        });
+    } 
+
+    return TimeLine
+})();
+},{}],11:[function(require,module,exports){
+var CalendarModel = require('../models/calendar.js');
+
+module.exports = (function () {
+    
+    function Calendar (onClick) {
+
+        this.model = new CalendarModel();
+        this.onClick = onClick;
+        this.el = document.getElementById('calendar');
+        this.el.innerHTML = '<div class="calendar-content"></div>';
+    }
+
+    var months = {
+        0: "Gener",
+        1: "Febrer",
+        2: "Març",
+        3: "Abril",
+        4: "Maig",
+        5: "Juny",
+        6: "Juliol",
+        7: "Agost",
+        8: "Setembre",
+        9: "Octubre",
+        10: "Novembre",
+        11: "Desembre"
+    }
+    Calendar.prototype.parseMonth = function (index) {
+        return months[index];
+    }
+
+    Calendar.prototype.render = function () {
+        var self = this;
+        var calendarBody = this.el.children[0],
+            weekRow,
+            monthHeader;
+
+        var monthHeader = document.createElement('div');
+        monthHeader.classList.add('calendar__month-header');
+        monthHeader.innerText = this.parseMonth(this.model.date.month);
+        calendarBody.appendChild(monthHeader);
+
+        var daysWrapper = document.createElement('div');
+        daysWrapper.classList.add('calendar__days-wrapper');
+        calendarBody.appendChild(daysWrapper);
+
+        this.model.getMonth().map(function (day) {
+            var dayEl = document.createElement('div');
+            dayEl.classList.add('day');
+            dayEl.innerText = day;
+            dayEl.setAttribute('data-day', day);
+            dayEl.setAttribute('data-month', self.model.date.month+1);
+            dayEl.setAttribute('data-year', 2019);
+            dayEl.addEventListener('click', function (ev) {
+                var year = ev.currentTarget.getAttribute('data-year');
+                var month = ev.currentTarget.getAttribute('data-month');
+                var day = ev.currentTarget.getAttribute('data-day');    
+                self.model.date = {
+                    year: year,
+                    month: month-1,
+                    day: day
+                };
+                self.onClick(self.model.date);
+            });
+            daysWrapper.appendChild(dayEl);
+        });
+
+        // this.model.getCalendar().map((month, monthN) => {
+        //     monthHeader = document.createElement('div');
+        //     monthHeader.innerHTML = '<p>'+(monthN+1)+'</th>';
+        //     calendarBody.appendChild(monthHeader);
+        //     month.map((week, weekN) => {
+        //         weekRow = document.createElement('tr');
+        //         if (week.length != 7) {
+        //             if (weekN == 0) {
+        //                 week = Array.apply(null, Array(7 - week.length)).map(d => '').concat(week);
+        //             } else {
+        //                 week = week.concat(Array.apply(null, Array(7 - week.length)).map(d => ''));
+        //             }
+        //         }
+        //         week.map(day => {
+        //             var dayData = document.createElement('td');
+        //             if (day !== '') {
+        //                 dayData.setAttribute('data-day', day);
+        //                 dayData.setAttribute('data-month', monthN+1);
+        //                 dayData.setAttribute('data-year', 2019);
+        //                 dayData.addEventListener('click', function (ev) {
+        //                     var year = ev.currentTarget.getAttribute('data-year');
+        //                     var month = ev.currentTarget.getAttribute('data-month');
+        //                     var day = ev.currentTarget.getAttribute('data-day');    
+        //                     self.model.date = {
+        //                         year: year,
+        //                         month: month-1,
+        //                         day: day
+        //                     };
+        //                     self.onClick(self.model.date);
+        //                 });
+        //                 dayData.classList.add('day');
+        //             }
+        //             dayData.innerHTML = day;
+        //             weekRow.appendChild(dayData);
+        //         });
+        //         calendarBody.appendChild(weekRow);
+        //     });
+        // });
+
+        this.el.getElementsByClassName('day')[0].classList.add('active');
+    }
+
+    return Calendar;
+})();
+},{"../models/calendar.js":9}],12:[function(require,module,exports){
+var CalendarView = require('./calendar.js');
+var TimeLineView = require('./timeline.js');
+
+module.exports = (function () {
+    
+    var interval;
+
+    function onCalendarClick (date) {
+        this.stop();
+        var hour = this.timeLineView.model.hour;
+        this.onChange(date.year, Number(date.month)+1, date.day, hour);
+    }
+    
+    function onTimeLineClick (hour) {
+        this.stop();
+        var date = this.calendarView.model.date;
+        this.onChange(date.year, Number(date.month)+1, date.day, hour);
+    }
+
+    function DateTime (onChange) {
+        var self = this;
+        this.onChange = function (year, month, day, hour) {
+            Array.apply(null, self.calendarView.el.getElementsByClassName('day')).map(function (el) {
+                if (el.getAttribute('data-year') == year && el.getAttribute('data-month') == month && el.getAttribute('data-day') == day) {
+                    el.classList.add('active');
+                } else {
+                    el.classList.remove('active');
+                }
+            });
+            Array.apply(null, self.timeLineView.el.getElementsByClassName('hour')).map(function (el) {
+                if (el.getAttribute('data-hour') == hour.replace(/h0?/, '')) {
+                    el.classList.add('active');
+                } else {
+                    el.classList.remove('active');
+                }
+            });
+            onChange.apply(null, arguments);
+        };
+        this.calendarView = new CalendarView(onCalendarClick.bind(this));
+        this.calendarView.render();
+        this.timeLineView = new TimeLineView(onTimeLineClick.bind(this));
+        this.timeLineView.render();
+    }
+
+    DateTime.prototype.start = function start () {
+        var self = this;
+        var hour, date;
+        interval = setInterval(function () {
+            hour = self.timeLineView.model.next();
+            if (hour == 'h01') {
+                date = self.calendarView.model.next();
+            } else {
+                date = self.calendarView.model.date;
+            }
+
+            self.onChange(date.year, Number(date.month)+1, date.day, hour);
+        }, 1000);
+    }
+
+    DateTime.prototype.stop = function stop () {
+        clearInterval(interval);
+    }
+
+    return DateTime;
+})();
+},{"./calendar.js":11,"./timeline.js":13}],13:[function(require,module,exports){
+var TimeLineModel = require('../models/timeline.js');
+
+module.exports = (function () {
+    
+    function TimeLine (onClick) {
+    
+        this.model = new TimeLineModel();
+        this.onClick = onClick;
+        this.el = document.getElementById('timeline');
+        this.el.innerHTML = '<div class="timeline-content"></div>';
+
+        var timelineBody = this.el.children[0];
+        timelineBody.innerHTML = '<div class="timeline__nav backward">&laquo;</div><div class="timeline__hours-wrapper"></div><div class="timeline__nav forward">&raquo;</div>';
+    }
+
+    TimeLine.prototype.parseDay = function (index) {
+        return (String(index).length == 1 ? '0'+index : index) + ':00';
+    }
+
+    TimeLine.prototype.render = function render () {
+        var self = this;
+
+        var hoursWrapper = this.el.getElementsByClassName('timeline__hours-wrapper')[0];
+
+        var hourEl;
+        this.model.getHours().map(function (hour) {
+            hourEl = document.createElement('div');
+            hourEl.classList.add('hour');
+            hourEl.innerText = self.parseDay(hour);
+            hourEl.setAttribute('data-hour', hour);
+            hourEl.addEventListener('click', function (ev) {
+                var hour = ev.currentTarget.getAttribute('data-hour');
+                self.model.hour = hour;
+                self.onClick(self.model.hour);
+            });
+            hoursWrapper.appendChild(hourEl);
+        });
+
+        this.el.getElementsByClassName('hour')[0].classList.add('active');
+
+        Array.apply(null, this.el.getElementsByClassName('timeline__nav')).map(function (el) {
+            el.addEventListener('click', function () {
+                debugger;
+                el.getAttribute('class').indexOf('forward') > 0 ?
+                    self.model.hour = self.model.hour + 1 :
+                    self.model.hour = self.model.hour - 1;
+
+                self.onClick(self.model.hour);
+            });
+        })
+    }
+
+    return TimeLine;
+})();
+},{"../models/timeline.js":10}]},{},[8]);

@@ -1,8 +1,8 @@
-var Scale = require('./components/Scale');
-var Projection = require('./components/Projection');
-var BBox = require('./components/BBox');
-var Coordinates = require('./components/Coordinates');
-var { uid } = require('./helpers');
+var Scale = require('./components/Scale.js');
+var Projection = require('./components/Projection.js');
+var BBox = require('./components/BBox.js');
+var Coordinates = require('./components/Coordinates.js');
+var { uid } = require('../helpers.js');
 
 function Geojson2Three (scene, options) {
     if (!scene) {
@@ -24,6 +24,7 @@ Geojson2Three.prototype.fitEnviron = function () {
     if (!this.srcData) throw new Error("You must bind data before");
     this.offset = window.innerWidth > window.innerHeight ? window.innerHeight : window.innerWidth;
     this.bbox = new BBox(this.srcData).get();
+    console.log(this.bbox);
     this.projection = Projection(this.offset);
     this.scaleX = Scale([0, this.offset], this.projection([this.bbox.SW[0], this.bbox.NE[0]]));
     this.scaleY = Scale([0, this.offset], this.projection([this.bbox.SW[1], this.bbox.NE[1]]));
@@ -115,11 +116,11 @@ Geojson2Three.prototype.update = function (geojson, options) {
             } else if (geom.type == 'Polygon') {
                 for (var j=0; j<geom.coordinates.length; j++) {
                     coordinates = new Coordinates(geom.coordinates[j]);
-                    var line = this.Line(coordinates.map(function (coord) {
+                    var polygon = this.Polygon(coordinates.map(function (coord) {
                         return self.project(coord, z_coordinate);
                     }), options, feat);
-                    object.geometry = line.geometry;
-                    object.material = line.material;
+                    object.geometry = polygon.geometry;
+                    object.material = polygon.material;
                 }
             } else if (geom.type == 'MultiLineString') {
                 for (var j=0; j<geom.coordinates.length; j++) {
@@ -147,8 +148,6 @@ Geojson2Three.prototype.update = function (geojson, options) {
                 throw new Error('The geoJSON is not valid.');
             }
         }
-
-        // this.env.render();
     }
 }
 
@@ -186,11 +185,11 @@ Geojson2Three.prototype.draw = function (options) {
         } else if (geom.type == 'Polygon') {
             for (var j=0; j<geom.coordinates.length; j++) {
                 coordinates = new Coordinates(geom.coordinates[j]);
-                var line = this.Line(coordinates.map(function (coord) {
+                var polygon = this.Polygon(coordinates.map(function (coord) {
                     return self.project(coord, z_coordinate);
                 }), options, feat);
-                this.objects.push(line);
-                line.draw();
+                this.objects.push(polygon);
+                polygon.draw();
             }
         } else if (geom.type == 'MultiLineString') {
             for (var j=0; j<geom.coordinates.length; j++) {
@@ -202,16 +201,16 @@ Geojson2Three.prototype.draw = function (options) {
                 line.draw();
             }
         } else if (geom.type == 'MultiPolygon') {
-            for (var j=0; i<geom.coordinates.length; j++) {
+            for (var j=0; j<geom.coordinates.length; j++) {
                 polygon = geom.coordinates[j];
                 for (var k=0; k<polygon.length; k++) {
                     segment = polygon[k];
                     coordinates = new Coordinates(segment);
-                    var line = this.Line(coordinates.map(function (coord) {
+                    var polygon = this.Polygon(coordinates.map(function (coord) {
                         return self.project(coord, z_coordinate);
                     }), options, feat);
-                    this.objects.push(line);
-                    line.draw();
+                    this.objects.push(polygon);
+                    polygon.draw();
                 }
             }
         } else {
@@ -265,6 +264,36 @@ Geojson2Three.prototype.Geom = function (sc, name) {
     return geom;
 }
 
+Geojson2Three.prototype.Shape = function (sc, name) {
+    var shape = new THREE.Shape();
+    sc.map(function (coord, i) {
+        if (i == 0) {
+            shape.moveTo(coord[0], coord[1]);
+        } else {
+            shape.lineTo(coord[0], coord[1]);
+        }
+    });
+
+    var geometry = new THREE.ShapeGeometry(shape);
+    geometry.name = name || uid();
+    return geometry;
+}
+
+Geojson2Three.prototype.Edges = function (sc, name) {
+    var shape = new THREE.Shape();
+    sc.map(function (coord, i) {
+        if (i == 0) {
+            shape.moveTo(coord[0], coord[1]);
+        } else {
+            shape.lineTo(coord[0], coord[1]);
+        }
+    });
+
+    var geometry = new THREE.EdgesGeometry(new THREE.ShapeGeometry(shape));
+    geometry.name = name || uid();
+    return geometry;
+}
+
 Geojson2Three.prototype.PointMaterial = function (options, feature, name) {
     options = Object.keys(options).reduce(function (a, k) {
         a[k] = typeof options[k] === "function" ? options[k](feature) : options[k];
@@ -287,13 +316,22 @@ Geojson2Three.prototype.LineMaterial = function (options, feature, name) {
     return material;
 }
 
+Geojson2Three.prototype.BasicMaterial = function (options, feature, name) {
+    options = Object.keys(options).reduce(function (a, k) {
+        a[k] = typeof options[k] === "function" ? options[k](feature) : options[k];
+        return a;
+    }, new Object());
+
+    var material = new THREE.MeshBasicMaterial(options);
+    material.name = name || uid();
+    return material;
+}
+
 Geojson2Three.prototype.Line = function (sc, options, feature) {
     var name = uid();
     var line_geom = this.Geom(sc, name);
-    line_geom.name = name;
     
     var line_material = this.LineMaterial(options, feature, name);
-    line_material.name = name;
     
     var line = new THREE.Line(line_geom, line_material);
     line.name = name;
@@ -304,6 +342,25 @@ Geojson2Three.prototype.Line = function (sc, options, feature) {
     }
 
     return line;
+}
+
+Geojson2Three.prototype.Polygon = function (sc, options, feature) {
+    var name = uid();
+    var polygon_geom = this.Shape(sc, name);
+    var edges_geom = this.Edges(sc, name);
+
+    var polygon_material = this.BasicMaterial(options, feature, name);
+    var edges_material = this.LineMaterial({color: 0xcccccc, linewidth: 1, linecap: 'round', linejoin:  'round'}, feature, name);
+    var polygon = new THREE.Mesh(polygon_geom, polygon_material);
+    var edges = new THREE.LineSegments(edges_geom, edges_material);
+
+    var self = this;
+    polygon.draw = function () {
+        self.scene.add(polygon);
+        self.scene.add(edges);
+    }
+
+    return polygon;
 }
 
 Geojson2Three.prototype.clear = function () {

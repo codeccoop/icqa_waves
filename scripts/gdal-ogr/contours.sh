@@ -3,7 +3,9 @@
 src_layer=$1
 dst_layer=$2
 
-rm $dst_layer || true
+if [ -f "$dst_layer" ]; then
+    rm $dst_layer
+fi
 
 min=$(gdalinfo -mm $src_layer  | grep -o "Min/Max.*" | grep -o "=[0-9\.]*" | grep -o "[0-9\.]*")
 if [ -z "$min" ]; then
@@ -25,4 +27,4 @@ echo "max: $max"
 echo "range: $range"
 echo "ratio: $ratio"
 
-gdal_contour -b 1 -snodata -99.0 -a icqa -i $ratio -f "GeoJSON" $src_layer $dst_layer
+gdal_contour -b 1 -snodata -999.0 -a icqa -i $ratio -f "GeoJSON" $src_layer $dst_layer
