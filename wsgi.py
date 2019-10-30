@@ -19,7 +19,7 @@ if "--dev" in argv:
 else:
     port = 8000
     environment = 'production'
-    mongodb_uri = getenv("MONGODB_URI")
+    mongodb_uri = getenv("PROD_MONGODB_URI")
     debug = False
 
 

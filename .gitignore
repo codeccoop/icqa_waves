@@ -5,6 +5,7 @@
 
 # FOLDERS
 .venv
+.backups/*
 log/*
 __pycache__
 data/*
