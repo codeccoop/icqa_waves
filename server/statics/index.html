@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>ICQA Waves</title>
+
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+		<meta name="author" content="Orzo Cogorzo" />
+		<meta name="description" content="Stream Flowpaths visor" />
+		<meta name="keywords" content="streams, flowpaths, hidrology, maps" />
+		
+		<link href="/statics/css/reset.css" rel="stylesheet" type="text/css" />
+		<link href="/statics/css/layout.css" rel="stylesheet" type="text/css" />
+
+		<script src="/statics/vendor/three.min.js"></script>
+		<!-- <script src="vendor/trackball_controls.three.js"></script> -->
+		<script src="/statics/vendor/TrackballControls.js"></script>
+		<!-- <script src="vendor/Q3D.OrbitControls.js"></script> -->
+		<!-- <script src="vendor/OrbitControls.js"></script> -->
+		<!-- <script src="vendor/FirstPersonControls.js"></script> -->
+		<!-- <script src="vendor/DragControls.js"></script> -->
+		<!-- <script src="vendor/FlyControls.js"></script> -->
+		<!-- <script src="vendor/PointerLockControls.js"></script> -->
+		<!-- <script src="vendor/TransformControls.js"></script> -->
+	</head>
+	<body>
+		<canvas id="canvas"></canvas>
+		<div id="scales">
+			<div class="scales__wrapper">
+				<div class="scales__title">ESCALES</div>
+				<div class="scales__scale scale active" data-value="relative">
+					<abbr title="Escala de l'eix Z en funció als valors de les dades visibles">RELATIVA</abbr></div>
+				<div class="scales__scale scale" data-value="absolute">
+					<abbr title="Escala de l'eix Z en funció de l'escala estandaritzada del ICQA">ICQA</abbr></div>
+			</div>
+		</div>
+		<div id="info">
+			<div class="info__icon"></div>
+			<div class="info__content">
+				<p>Visualització de les mesures de PM10 del ICQA per a l'Àrea Metropolitana de Barcelona al llarg de l'any 2018.</p>
+				<h4>Metodologia</h4>
+				<p>Interpolació amb algoritme <em>Inverse Distance Weighting</em> dels valors de les estacions de mesura de l'AMB obtenint una matriu de valors
+				continua de l'extensió de l'AMB. Ajustada l'extensió geogràfica de la matriu als límits municipals, s'inverteixen els valors per obtenir un index
+				amb rang de 0 a 200, sent 200 el pitjor dels casos i 0 el millor. De la matriu se n'extreuen isolinies d'unió de cel·les amb valors iguals i, un
+				cop guardades en format GeoJSON, es pinten al visor tractades com a linies d'altura.</p>
+				<h4>Escales</h4>
+				<p>L'escala relativa utilitza els valors màxim/minim relatius a la capa per a determinar l'altura i el color de les linies representades. El rang 
+				amb el que es treballa és, per tant, variable. Els resultats d'aquest mode de visualització no són comparables entre diferents dies. L'objectiu 
+				d'aquesta escala es representar de forma inequivoca les diferències entre les diferents zones de l'AMB i servir d'eina per a l'identificació
+				patrons de concentració relativa de contaminació.</p>
+				<p>L'escala ICQA s'ajusta al estandar del ICQA, adaptat per a la visualització. Treballa sobre un rang de 0 a 200, sent els valors de 0 a 50
+				molt bons, de 50.1 a 100 bons, i de 100.1 cap a amunt, dolents o molt dolents. Aquest rang es constant i per tant permet fer comparacions entre
+				diferents moments de l'any. La distribució normal de les dades fa que els canvis i les diferències entre dies i zones quedin dissimulades.</p>
+			</div>
+		</div>
+		<div id="controls">
+			<div class="time-controls">
+				<div id="timeline"></div>
+				<div id="calendar"></div>
+			</div>
+			<div class="animation-controls"><div id="animate"></div>
+		</div>
+		<script src="/statics/index.bundle.js"></script>
+	</body>
+</html>
