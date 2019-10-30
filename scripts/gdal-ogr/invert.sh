@@ -3,7 +3,7 @@
 src_layer=$1
 dst_layer=$2
 
-# max=$(gdalinfo -mm $src_layer  | grep -o "Min/Max.*" | grep -o "[0-9\.]*$")
+max=$(gdalinfo -mm $src_layer  | grep -o "Min/Max.*" | grep -o "[0-9\.]*$")
 # if [ -z "$max" ]; then
 #     max=100
 # fi

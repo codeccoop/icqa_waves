@@ -76,7 +76,7 @@ def read (magnitude, province, year, month, day, hour):
 
 
 def run ():
-    year = "2019"
+    year = "2018"
     months = [str(i+1) for i in range(12)]
     days = [str(i+1) for i in range(31)]
     hours = ["0"+ h if len(h) == 1 else h for h in [str(i+1) for i in range(24)]]

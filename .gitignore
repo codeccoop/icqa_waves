@@ -1,3 +1,18 @@
-data/*
+# FILES
 *.*~
 *.qgz
+*.pyc
+
+# FOLDERS
+.venv
+log/*
+__pycache__
+data/*
+server/statics/*
+server/data/*
+client/data/*
+
+# IDES
+.idea
+.vscode
+

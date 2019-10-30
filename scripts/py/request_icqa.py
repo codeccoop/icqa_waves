@@ -64,7 +64,7 @@ def write (magnitude, province, year, month, day, points):
         
     
 def run ():
-    year = 2019
+    year = 2018
     months = [i+1 for i in range(12)]
     days = [i+1 for i in range(31)]
     
