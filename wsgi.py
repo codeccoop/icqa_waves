@@ -1,6 +1,7 @@
 # SYS
 from sys import argv
 from os.path import join, dirname, realpath
+from os import getenv
 
 # MODULES
 from server import WSGI
@@ -18,7 +19,7 @@ if "--dev" in argv:
 else:
     port = 8000
     environment = 'production'
-    mongodb_uri = "mongodb://localhost:27017/icwa_waves"
+    mongodb_uri = getenv("MONGODB_URI")
     debug = False
 
 
