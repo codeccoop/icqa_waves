@@ -2,7 +2,6 @@ var CACHE_NAME = 'icqawaves';
 
 var urlsToCache = [
     '/rest/municipalities',
-    '/rest/contours/10/8/2018/1/1/h01'
 ];
 
 self.addEventListener('install', function (event) {
@@ -11,9 +10,10 @@ self.addEventListener('install', function (event) {
         caches.open(CACHE_NAME)
         .then(function (cache) {
             console.log('Opened cache');
+            request(contours);
             return cache.addAll(urlsToCache);
         }).then(function () {
-            request(contours);
+            
         })
     );
 });
