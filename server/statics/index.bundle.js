@@ -355,7 +355,7 @@ Geojson2Three.prototype.fitEnviron = function (z_field, settings) {
     //     x2: this.scaleX(pNE[0]),
     //     y2: this.scaleY(pNE[1])
     // }
-    // debugger;
+    
     // this.env.camera.position.set(pBBox.x2 - pBBox.x1, pBBox.y2 - pBBox.y1, 900);
     // this.env.camera.lookAt(0,0,0);
     // this.env.camera.updateProjectionMatrix();
