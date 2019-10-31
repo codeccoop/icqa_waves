@@ -8,11 +8,13 @@
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 
 		<meta name="author" content="Orzo Cogorzo" />
-		<meta name="description" content="Stream Flowpaths visor" />
-		<meta name="keywords" content="streams, flowpaths, hidrology, maps" />
+		<meta name="description" content="ICQA Waves is a visualization of BCN air polution in a 3D way" />
+		<meta name="keywords" content="ICQA, dataviz, opendata, BCN Open Data, Data World Viz Challenge, three.js" />
 		
 		<link href="/statics/css/reset.css" rel="stylesheet" type="text/css" />
 		<link href="/statics/css/layout.css" rel="stylesheet" type="text/css" />
+
+		<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,500,700&display=swap" rel="stylesheet">
 
 		<script src="/statics/vendor/three.min.js"></script>
 		<!-- <script src="vendor/trackball_controls.three.js"></script> -->
@@ -26,6 +28,11 @@
 		<!-- <script src="vendor/TransformControls.js"></script> -->
 	</head>
 	<body>
+		<div id="welcome">
+			<div>Welcome to</div>
+			<div class="title"><span>ICQA</span><span>WAVES</span></div>
+			<div class="spin-loader"></div>
+		</div>
 		<canvas id="canvas"></canvas>
 		<div id="scales">
 			<div class="scales__wrapper">
@@ -39,20 +46,28 @@
 		<div id="info">
 			<div class="info__icon"></div>
 			<div class="info__content">
-				<p>Visualització de les mesures de PM10 del ICQA per a l'Àrea Metropolitana de Barcelona al llarg de l'any 2018.</p>
-				<h4>Metodologia</h4>
-				<p>Interpolació amb algoritme <em>Inverse Distance Weighting</em> dels valors de les estacions de mesura de l'AMB obtenint una matriu de valors
-				continua de l'extensió de l'AMB. Ajustada l'extensió geogràfica de la matriu als límits municipals, s'inverteixen els valors per obtenir un index
-				amb rang de 0 a 200, sent 200 el pitjor dels casos i 0 el millor. De la matriu se n'extreuen isolinies d'unió de cel·les amb valors iguals i, un
-				cop guardades en format GeoJSON, es pinten al visor tractades com a linies d'altura.</p>
+				<p>Visualització de les mesures de PM10 del ICQA per a l'àmbit de l'Àrea Metropolitana de Barcelona al llarg de l'any 2018.</p>
+				<h4>Colors</h4>
+				<p>L'escala de valors es tradueix, a la visualització, en una escala de colors que compren els següents valors:
+					<span style="color: #ff4891;"><b>Molt Dolent</b></span>,
+					<span style="color: #d2769e;"><b>Dolent</b></span>,
+					<span style="color: #77d2b7;"><b>Bo</b></span>,
+					<span style="color: #4affc3;"><b>Molt Bo</b></span>
+				</p>
 				<h4>Escales</h4>
-				<p>L'escala relativa utilitza els valors màxim/minim relatius a la capa per a determinar l'altura i el color de les linies representades. El rang 
-				amb el que es treballa és, per tant, variable. Els resultats d'aquest mode de visualització no són comparables entre diferents dies. L'objectiu 
-				d'aquesta escala es representar de forma inequivoca les diferències entre les diferents zones de l'AMB i servir d'eina per a l'identificació
+				<p><b>L'escala relativa</b> utilitza els valors màxim/minim relatius a la data i l'hora seleccionades per a determinar l'altura i el color de les linies
+				representades. El rang amb el que es treballa és, per tant, variable. Els resultats d'aquest mode de visualització no són comparables en el temps.
+				L'objectiu d'aquesta escala es representar les diferències entre els diferents territoris de l'AMB i servir d'eina per a l'identificació
 				patrons de concentració relativa de contaminació.</p>
-				<p>L'escala ICQA s'ajusta al estandar del ICQA, adaptat per a la visualització. Treballa sobre un rang de 0 a 200, sent els valors de 0 a 50
-				molt bons, de 50.1 a 100 bons, i de 100.1 cap a amunt, dolents o molt dolents. Aquest rang es constant i per tant permet fer comparacions entre
-				diferents moments de l'any. La distribució normal de les dades fa que els canvis i les diferències entre dies i zones quedin dissimulades.</p>
+				<p><b>L'escala ICQA</b> s'ajusta al estandar utilitzat pel departament de Territori, adaptat per a la visualització. Treballa sobre un rang de 0 a 200,
+				sent els valors de 0 a 50 molt bons, de 50,1 a 100 bons, i de 100,1 cap a amunt, dolents o molt dolents. Aquest rang es constant en el temps permetent
+				així fer comparacions en el temps. La distribució normal de les dades fa que els canvis i les diferències entre dies i zones quedin 
+				dissimulades i sigui difícil identificar les diferències territorials.</p>
+				<h4>Metodologia</h4>
+				<p>Interpolació amb l'algoritme <em>Inverse Distance Weighting</em> dels valors de les estacions de mesura de l'AMB obtenint una matriu de valors
+				amb extensió espaial corresponent a l'àrea de l'AMB. Ajustada l'extensió geogràfica de la matriu als límits municipals, s'inverteixen els valors
+				amb tal d'obtenir un index amb rang de valors de 0 a 200, sent 200 el pitjor dels casos i 0 el millor. De la matriu se n'extreuen isolinies d'unió
+				de cel·les amb valors iguals i, un cop traduides a format <em>GeoJSON</em>, es pinten al visor tractades com a linies d'altura.</p>
 			</div>
 		</div>
 		<div id="controls">

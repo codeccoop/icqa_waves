@@ -2,11 +2,14 @@ var TimeLineModel = require('../models/timeline.js');
 
 module.exports = (function () {
     
-    function TimeLine (onClick) {
+    function TimeLine (onClick, config) {
         var self = this;
         this.onClick = onClick;
         this.model = new TimeLineModel(this);
         this.el = document.getElementById('timeline');
+
+        if (config.background) return this;
+
         this.el.innerHTML = '<div class="timeline__content"></div>';
 
         var timelineBody = this.el.children[0];

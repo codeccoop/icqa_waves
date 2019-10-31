@@ -1,14 +1,5 @@
 module.exports = (function () {
 
-    var _hour = 0;
-    var hours = (function () {
-        return (function* () {
-            while (true) {
-                yield (_hour + 1)%24;
-            }
-        })();
-    })();
-
     function format (hour) {
         return 'h' + (String(hour).length == 1 ? '0'+hour : hour);
     }
@@ -26,19 +17,27 @@ module.exports = (function () {
     function TimeLine (view) {
         var self = this;
         this.view = view;
+        this.state = 0;
+        this.hours = (function () {
+            return (function* () {
+                while (true) {
+                    yield (self.state + 1)%24;
+                }
+            })();
+        })();
         Object.defineProperty(this, 'hour', {
             get: function () {
-                return format(_hour+1);
+                return format(self.state+1);
             },
             set: function (val) {
-                var _old = _hour;
-                _hour = val-1 < 0 ? 23 : val-1 > 23 ? 0 : val-1;
+                var _old = self.state;
+                self.state = val-1 < 0 ? 23 : val-1 > 23 ? 0 : val-1;
 
-                _old == 23 && _hour == 0 ?
+                _old == 23 && self.state == 0 ?
                     dispatch.call(self, 'forward') : 
-                    _old == 0 && _hour == 23 ?
+                    _old == 0 && self.state == 23 ?
                         dispatch.call(self, 'backward') : 
-                        _old < _hour ?
+                        _old < self.state ?
                          dispatch.call(self, 'forward', 'hour') :
                          dispatch.call(self, 'backward', 'hour');
             }
@@ -46,8 +45,8 @@ module.exports = (function () {
     }
 
     TimeLine.prototype.next = function next () {
-        _hour = hours.next().value;
-        return format(_hour+1);
+        this.state = this.hours.next().value;
+        return format(this.state+1);
     }
 
     TimeLine.prototype.getHours = function getHours () {

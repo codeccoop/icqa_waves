@@ -2,19 +2,22 @@ var CalendarModel = require('../models/calendar.js');
 
 module.exports = (function () {
     
-    function Calendar (onClick) {
+    function Calendar (onClick, config) {
         var self = this;
         this.onClick = onClick;
         this.model = new CalendarModel(this);
         this.el = document.getElementById('calendar');
+
+        if (config.background) return this;
+
         this.el.innerHTML = '<div class="calendar__header"></div><div class="calendar__content"></div>';
 
         var timelineBody = this.el.children[1];
-        timelineBody.innerHTML = '<div class="calendar__nav backward" scale="month" disable><abbr title="navegació per mesos">&lsaquo;</abbr></div>' +
+        timelineBody.innerHTML = '<div class="calendar__nav backward" scale="month" disabled><abbr title="navegació per mesos">&lsaquo;</abbr></div>' +
             '<div class="calendar__nav backward" scale="day"><abbr title="navegació per dies">&laquo;</abbr></div>' +
                 '<div class="calendar__days-wrapper"></div>' +
             '<div class="calendar__nav forward" scale="day"><abbr title="navegació per dies">&raquo;</abbr></div>' +
-            '<div class="calendar__nav forward" scale="month" disable><abbr title="navegació per mesos">&rsaquo;</abbr></div>';
+            '<div class="calendar__nav forward" scale="month" disabled><abbr title="navegació per mesos">&rsaquo;</abbr></div>';
 
         this.el.addEventListener("change", function (ev) {
             if (ev.detail.type == "month") {

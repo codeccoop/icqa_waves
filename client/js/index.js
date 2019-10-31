@@ -4,6 +4,8 @@ var { request, lerpColor } = require('./helpers.js');
 var DateTime = require('./views/datetime.js');
 
 
+window.CACHE_NAME = 'icqawaves';
+
 document.addEventListener("DOMContentLoaded", function (ev) {
     var resolution = 1;
     var relative = true;
@@ -64,17 +66,29 @@ document.addEventListener("DOMContentLoaded", function (ev) {
     }
 
     function requestData (year, month, day, hour) {
-        // var url = "/rest/contours/10/8/"+year+"/"+month+"/"+day+"/"+hour;
-        var url = "/rest/contours/10/8/"+year+"/1/"+day+"/"+hour;
-        return request(url, function (geojson) {
-            jsonToScene(geojson);
+        return new Promise(function (res, rej) {
+            // var url = "/rest/contours/10/8/"+year+"/"+month+"/"+day+"/"+hour;
+            var url = "/rest/contours/10/8/"+year+"/1/"+day+"/"+hour;
+            request(url, function (geojson) {
+                jsonToScene(geojson);
+                res(geojson);
+            }, function (err) {
+                rej(err);
+            });
         });
     }
     
-    requestData(2018, 1, 1, 'h01');
+    var ready = [false, false];
+    requestData(2018, 1, 1, 'h01').then(function () {
+        ready[0] = true;
+        if (ready.reduce(function (a,d) { return a && d}, true)) {
+            document.body.classList.add('ready');
+        }
+    });
     
     request('/rest/municipalities', function (geojson) {
-        new Geojson2Three(env).data(geojson)
+        new Geojson2Three(env)
+        .data(geojson)
         .fitEnviron(null, {
             resolutionFactor: resolution,
             scaleZ: 0,
@@ -86,6 +100,10 @@ document.addEventListener("DOMContentLoaded", function (ev) {
         });
         env.render();
         env.animate();
+        ready[1] = true;
+        if (ready.reduce(function (a,d) { return a && d}, true)) {
+            document.body.classList.add('ready');
+        }
     });
 
     Array.apply(null, document.getElementById('scales').getElementsByClassName('scale')).map(function (el, i, els) {
@@ -98,4 +116,52 @@ document.addEventListener("DOMContentLoaded", function (ev) {
             jsonToScene(_data);
         });
     });
+
+    (function background () {
+        var dt;
+        function controller (year, month, day, hour) {
+            var url = "/rest/contours/10/8/"+year+"/1/"+day+"/"+hour;
+            var promise = new Promise(function (res, rej) {
+                request(url, function (geojson) {
+                    res(geojson)
+                }, function (err) {
+                    rej(err);
+                });
+            });
+            if (year == 2018 && month == 1 && day == 31 && hour == 'h24') {
+                dt.stop();
+            }
+            return promise;
+        }
+
+        dt = new DateTime(controller, {
+            background: true
+        });
+
+        dt.start();
+    })();
+
+    document.body.addEventListener('click', function (ev) {
+        if (document.body.classList.contains('waiting')) {
+            ev.stopImmediatePropagation();
+            ev.stopPropagation();
+            ev.preventDefault();
+        }
+    }, true);
+
+    document.getElementById('canvas').addEventListener('mousedown', function (ev) {
+        if (ev.currentTarget.classList.contains('blocked')) {
+            ev.stopPropagation();
+            ev.stopImmediatePropagation();
+            ev.preventDefault();
+        }
+    }, true);
+
+    document.getElementById('canvas').addEventListener('mousemove', function (ev) {
+        if (ev.currentTarget.classList.contains('blocked')) {
+            ev.stopPropagation();
+            ev.stopImmediatePropagation();
+            ev.preventDefault();
+        }
+    }, true);
 });

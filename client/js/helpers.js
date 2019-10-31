@@ -1,16 +1,53 @@
-exports.request = function request (URL, callback) {
-    var ajax = new XMLHttpRequest();
-    ajax.open("GET", URL, true);
-    ajax.onreadystatechange = function () {
-        if (this.readyState === 4) {
-            if (this.status === 200) {
-                callback(JSON.parse(this.response));
-                } else {
-                console.log('error while fetchign json data');
-                }
-        }
-    }
-    ajax.send();    
+exports.request = function request (URL, callback, fallback) {
+    // var ajax = new XMLHttpRequest();
+    URL = location.protocol+'//'+location.host + URL;
+    window.caches.open(window.CACHE_NAME).then(function (cache) {
+        cache.match(URL).then(function (req) {
+            if (req) {
+                req.json().then(function (json) {
+                    // console.log('[CACHE:Get]: ', URL);
+                    callback(json);
+                });
+            } else {
+                fetch(URL).then(function (res) {
+                    window.caches.open(window.CACHE_NAME).then(function (cache) {
+                        cache.put(URL, res);
+                        console.log('[CACHE:Cached]: ', URL);
+                        cache.match(URL).then(function (req) {
+                            if (req) {
+                                req.json().then(function (json) {
+                                    callback(json);
+                                });
+                            } else {
+                                fetch(URL).then(function (res) {
+                                    window.caches.open(window.CACHE_NAME).then(function (cache) {
+                                        cache.put(URL, res);
+                                        cache.match(URL).then(function (req) {
+                                            req.json().then(function (json) {
+                                                callback(json);
+                                            });
+                                        });
+                                    });
+                                });
+                            }
+                        });
+                    });
+                });
+            }
+        }).catch(function () {
+            console.log('[CACHE:Error]:', url);
+            fetch(URL).then(function (res) {
+                window.caches.open(window.CACHE_NAME).then(function (cache) {
+                    cache.put(URL, res);
+                    cache.match(URL).then(function (req) {
+                        req.json().then(function (json) {
+                            callback(json);
+                        });
+                    });
+                });
+            });
+        });
+    });   
 }
 
 exports.lerpColor = function lerpColor (colorScale, amount) {

@@ -721,19 +721,56 @@ Geojson2Three.prototype.clear = function () {
 
 module.exports = Geojson2Three;
 },{"../helpers.js":7,"./components/BBox.js":1,"./components/Coordinates.js":2,"./components/Projection.js":4,"./components/Scale.js":5}],7:[function(require,module,exports){
-exports.request = function request (URL, callback) {
-    var ajax = new XMLHttpRequest();
-    ajax.open("GET", URL, true);
-    ajax.onreadystatechange = function () {
-        if (this.readyState === 4) {
-            if (this.status === 200) {
-                callback(JSON.parse(this.response));
-                } else {
-                console.log('error while fetchign json data');
-                }
-        }
-    }
-    ajax.send();    
+exports.request = function request (URL, callback, fallback) {
+    // var ajax = new XMLHttpRequest();
+    URL = location.protocol+'//'+location.host + URL;
+    window.caches.open(window.CACHE_NAME).then(function (cache) {
+        cache.match(URL).then(function (req) {
+            if (req) {
+                req.json().then(function (json) {
+                    // console.log('[CACHE:Get]: ', URL);
+                    callback(json);
+                });
+            } else {
+                fetch(URL).then(function (res) {
+                    window.caches.open(window.CACHE_NAME).then(function (cache) {
+                        cache.put(URL, res);
+                        console.log('[CACHE:Cached]: ', URL);
+                        cache.match(URL).then(function (req) {
+                            if (req) {
+                                req.json().then(function (json) {
+                                    callback(json);
+                                });
+                            } else {
+                                fetch(URL).then(function (res) {
+                                    window.caches.open(window.CACHE_NAME).then(function (cache) {
+                                        cache.put(URL, res);
+                                        cache.match(URL).then(function (req) {
+                                            req.json().then(function (json) {
+                                                callback(json);
+                                            });
+                                        });
+                                    });
+                                });
+                            }
+                        });
+                    });
+                });
+            }
+        }).catch(function () {
+            console.log('[CACHE:Error]:', url);
+            fetch(URL).then(function (res) {
+                window.caches.open(window.CACHE_NAME).then(function (cache) {
+                    cache.put(URL, res);
+                    cache.match(URL).then(function (req) {
+                        req.json().then(function (json) {
+                            callback(json);
+                        });
+                    });
+                });
+            });
+        });
+    });   
 }
 
 exports.lerpColor = function lerpColor (colorScale, amount) {
@@ -785,6 +822,8 @@ var Environ = require('./geojson2three/components/Environ.js');
 var { request, lerpColor } = require('./helpers.js');
 var DateTime = require('./views/datetime.js');
 
+
+window.CACHE_NAME = 'icqawaves';
 
 document.addEventListener("DOMContentLoaded", function (ev) {
     var resolution = 1;
@@ -846,17 +885,29 @@ document.addEventListener("DOMContentLoaded", function (ev) {
     }
 
     function requestData (year, month, day, hour) {
-        // var url = "/rest/contours/10/8/"+year+"/"+month+"/"+day+"/"+hour;
-        var url = "/rest/contours/10/8/"+year+"/1/"+day+"/"+hour;
-        return request(url, function (geojson) {
-            jsonToScene(geojson);
+        return new Promise(function (res, rej) {
+            // var url = "/rest/contours/10/8/"+year+"/"+month+"/"+day+"/"+hour;
+            var url = "/rest/contours/10/8/"+year+"/1/"+day+"/"+hour;
+            request(url, function (geojson) {
+                jsonToScene(geojson);
+                res(geojson);
+            }, function (err) {
+                rej(err);
+            });
         });
     }
     
-    requestData(2018, 1, 1, 'h01');
+    var ready = [false, false];
+    requestData(2018, 1, 1, 'h01').then(function () {
+        ready[0] = true;
+        if (ready.reduce(function (a,d) { return a && d}, true)) {
+            document.body.classList.add('ready');
+        }
+    });
     
     request('/rest/municipalities', function (geojson) {
-        new Geojson2Three(env).data(geojson)
+        new Geojson2Three(env)
+        .data(geojson)
         .fitEnviron(null, {
             resolutionFactor: resolution,
             scaleZ: 0,
@@ -868,6 +919,10 @@ document.addEventListener("DOMContentLoaded", function (ev) {
         });
         env.render();
         env.animate();
+        ready[1] = true;
+        if (ready.reduce(function (a,d) { return a && d}, true)) {
+            document.body.classList.add('ready');
+        }
     });
 
     Array.apply(null, document.getElementById('scales').getElementsByClassName('scale')).map(function (el, i, els) {
@@ -880,16 +935,60 @@ document.addEventListener("DOMContentLoaded", function (ev) {
             jsonToScene(_data);
         });
     });
+
+    (function background () {
+        var dt;
+        function controller (year, month, day, hour) {
+            var url = "/rest/contours/10/8/"+year+"/1/"+day+"/"+hour;
+            var promise = new Promise(function (res, rej) {
+                request(url, function (geojson) {
+                    res(geojson)
+                }, function (err) {
+                    rej(err);
+                });
+            });
+            if (year == 2018 && month == 1 && day == 31 && hour == 'h24') {
+                dt.stop();
+            }
+            return promise;
+        }
+
+        dt = new DateTime(controller, {
+            background: true
+        });
+
+        dt.start();
+    })();
+
+    document.body.addEventListener('click', function (ev) {
+        if (document.body.classList.contains('waiting')) {
+            ev.stopImmediatePropagation();
+            ev.stopPropagation();
+            ev.preventDefault();
+        }
+    }, true);
+
+    document.getElementById('canvas').addEventListener('mousedown', function (ev) {
+        if (ev.currentTarget.classList.contains('blocked')) {
+            ev.stopPropagation();
+            ev.stopImmediatePropagation();
+            ev.preventDefault();
+        }
+    }, true);
+
+    document.getElementById('canvas').addEventListener('mousemove', function (ev) {
+        if (ev.currentTarget.classList.contains('blocked')) {
+            ev.stopPropagation();
+            ev.stopImmediatePropagation();
+            ev.preventDefault();
+        }
+    }, true);
 });
 },{"./geojson2three/components/Environ.js":3,"./geojson2three/main.js":6,"./helpers.js":7,"./views/datetime.js":12}],9:[function(require,module,exports){
 module.exports = (function () {
     
     var _calendar,
-        _year,
-        _state = {year: 2018, month: 0, day: 0};
-
-    Object.freeze(_state);
-
+        _year;
         
     var month,
         date,
@@ -930,35 +1029,6 @@ module.exports = (function () {
     }, new Array());
     Object.freeze(_year);
 
-    var dates = (function () {
-        var day, month, year;
-        return (function* () {
-            while (true) {
-                day = _state.day + 1;
-                month = _state.month;
-                year = _state.year;
-                
-                if (day == _year[month].length) {
-                    day = 0;
-                    month++;
-                }
-
-                if (month == 12) {
-                    month = 0;
-                    year++;
-                }
-
-                date = {
-                    year: year,
-                    month: month,
-                    day: day
-                }
-
-                yield date;
-            }
-        })();
-    })();
-
     function dispatch (direction, type) {
         this.view.el.dispatchEvent(new CustomEvent("change", {
             detail: {
@@ -972,22 +1042,52 @@ module.exports = (function () {
     function Calendar (view) {
         var self = this;
         this.view = view;
+        this.state = {year: 2018, month: 0, day: 0};
+        Object.freeze(this.state);
+        this.dates = (function () {
+            var day, month, year;
+            return (function* () {
+                while (true) {
+                    day = self.state.day + 1;
+                    month = self.state.month;
+                    year = self.state.year;
+                    
+                    if (day == _year[month].length) {
+                        day = 0;
+                        month++;
+                    }
+    
+                    if (month == 12) {
+                        month = 0;
+                        year++;
+                    }
+    
+                    date = {
+                        year: year,
+                        month: month,
+                        day: day
+                    }
+    
+                    yield date;
+                }
+            })();
+        })();
         Object.defineProperty(this, 'date', {
             set: function (val) {
-                var _old = _state;
-                _state = ["day", "month", "year"].reduce(function (acum, key) {
+                var _old = self.state;
+                self.state = ["day", "month", "year"].reduce(function (acum, key) {
                     if (val[key] == undefined) {
-                        acum[key] = _state[key];
+                        acum[key] = self.state[key];
                     } else {
                         if (key == 'year') {
                             acum[key] = 2018; // val[key];
                         } else if (key == 'month') {
                             if (val[key] < 0) {
                                 acum[key] = 12+val[key]%12;
-                                val["year"] = val["year"] != undefined ? val["year"] - 1 : _state["year"] - 1;
+                                val["year"] = val["year"] != undefined ? val["year"] - 1 : self.state["year"] - 1;
                             } else if (val[key] >= 12) {
                                 acum[key] = val[key]%12;    
-                                val["year"] = val["year"] != undefined ? val["year"] + 1 : _state["year"] + 1;
+                                val["year"] = val["year"] != undefined ? val["year"] + 1 : self.state["year"] + 1;
                             } else {
                                 acum[key] = val[key];
                             }
@@ -998,10 +1098,10 @@ module.exports = (function () {
                         } else {
                             if (val[key] < 0) {
                                 acum[key] = self.getMonth(-1).length + val[key];
-                                val["month"] = val["month"] != undefined ? val["month"] - 1 : _state["month"] - 1;
+                                val["month"] = val["month"] != undefined ? val["month"] - 1 : self.state["month"] - 1;
                             } else if (val[key] >= self.getMonth().length) {
                                 acum[key] = val[key] - self.getMonth().length;
-                                val["month"] = val["month"] != undefined ? val["month"] + 1 : _state["month"] + 1;
+                                val["month"] = val["month"] != undefined ? val["month"] + 1 : self.state["month"] + 1;
                             } else {
                                 acum[key] = val[key];
                             }
@@ -1009,22 +1109,22 @@ module.exports = (function () {
                     }
                     return acum;
                 }, new Object());
-                Object.freeze(_state);
+                Object.freeze(self.state);
 
-                _old.month > _state.month ?
+                _old.month > self.state.month ?
                     dispatch.call(self, 'backward') :
-                    _old.month < _state.month ?
+                    _old.month < self.state.month ?
                         dispatch.call(self, 'forward') :
                         null;
 
-                _old.day > _state.day ?
+                _old.day > self.state.day ?
                     dispatch.call(self, 'backward', 'day') :
-                    _old.day < _state.day ?
+                    _old.day < self.state.day ?
                         dispatch.call(self, 'forward', 'day') :
                         null;
             },
             get: function () {
-                return _state;
+                return self.state;
             }
         })
     }
@@ -1044,24 +1144,15 @@ module.exports = (function () {
     }
 
     Calendar.prototype.next = function next () {
-        _state = dates.next().value;
-        Object.freeze(_state);
-        return _state;
+        this.state = this.dates.next().value;
+        Object.freeze(this.state);
+        return this.state;
     }
 
     return Calendar;
 })();
 },{}],10:[function(require,module,exports){
 module.exports = (function () {
-
-    var _hour = 0;
-    var hours = (function () {
-        return (function* () {
-            while (true) {
-                yield (_hour + 1)%24;
-            }
-        })();
-    })();
 
     function format (hour) {
         return 'h' + (String(hour).length == 1 ? '0'+hour : hour);
@@ -1080,19 +1171,27 @@ module.exports = (function () {
     function TimeLine (view) {
         var self = this;
         this.view = view;
+        this.state = 0;
+        this.hours = (function () {
+            return (function* () {
+                while (true) {
+                    yield (self.state + 1)%24;
+                }
+            })();
+        })();
         Object.defineProperty(this, 'hour', {
             get: function () {
-                return format(_hour+1);
+                return format(self.state+1);
             },
             set: function (val) {
-                var _old = _hour;
-                _hour = val-1 < 0 ? 23 : val-1 > 23 ? 0 : val-1;
+                var _old = self.state;
+                self.state = val-1 < 0 ? 23 : val-1 > 23 ? 0 : val-1;
 
-                _old == 23 && _hour == 0 ?
+                _old == 23 && self.state == 0 ?
                     dispatch.call(self, 'forward') : 
-                    _old == 0 && _hour == 23 ?
+                    _old == 0 && self.state == 23 ?
                         dispatch.call(self, 'backward') : 
-                        _old < _hour ?
+                        _old < self.state ?
                          dispatch.call(self, 'forward', 'hour') :
                          dispatch.call(self, 'backward', 'hour');
             }
@@ -1100,8 +1199,8 @@ module.exports = (function () {
     }
 
     TimeLine.prototype.next = function next () {
-        _hour = hours.next().value;
-        return format(_hour+1);
+        this.state = this.hours.next().value;
+        return format(this.state+1);
     }
 
     TimeLine.prototype.getHours = function getHours () {
@@ -1117,19 +1216,22 @@ var CalendarModel = require('../models/calendar.js');
 
 module.exports = (function () {
     
-    function Calendar (onClick) {
+    function Calendar (onClick, config) {
         var self = this;
         this.onClick = onClick;
         this.model = new CalendarModel(this);
         this.el = document.getElementById('calendar');
+
+        if (config.background) return this;
+
         this.el.innerHTML = '<div class="calendar__header"></div><div class="calendar__content"></div>';
 
         var timelineBody = this.el.children[1];
-        timelineBody.innerHTML = '<div class="calendar__nav backward" scale="month" disable><abbr title="navegació per mesos">&lsaquo;</abbr></div>' +
+        timelineBody.innerHTML = '<div class="calendar__nav backward" scale="month" disabled><abbr title="navegació per mesos">&lsaquo;</abbr></div>' +
             '<div class="calendar__nav backward" scale="day"><abbr title="navegació per dies">&laquo;</abbr></div>' +
                 '<div class="calendar__days-wrapper"></div>' +
             '<div class="calendar__nav forward" scale="day"><abbr title="navegació per dies">&raquo;</abbr></div>' +
-            '<div class="calendar__nav forward" scale="month" disable><abbr title="navegació per mesos">&rsaquo;</abbr></div>';
+            '<div class="calendar__nav forward" scale="month" disabled><abbr title="navegació per mesos">&rsaquo;</abbr></div>';
 
         this.el.addEventListener("change", function (ev) {
             if (ev.detail.type == "month") {
@@ -1223,8 +1325,6 @@ var CalendarView = require('./calendar.js');
 var TimeLineView = require('./timeline.js');
 
 module.exports = (function () {
-    
-    var interval;
 
     function onAnimationChange (run, el) {
         var animate = el || document.getElementById('animate');
@@ -1242,37 +1342,59 @@ module.exports = (function () {
         onAnimationChange.call(this, false);
     }
 
-    function DateTime (onChange) {
+    function DateTime (onChange, config) {
         var self = this;
+        this.config = config || new Object();
+        this.throttleResolver;
         this.onChange = function (year, month, day, hour) {
-            Array.apply(null, self.calendarView.el.getElementsByClassName('day')).map(function (el) {
-                if (el.getAttribute('data-year') == year && el.getAttribute('data-month') == month-1 && el.getAttribute('data-day') == day-1) {
-                    el.classList.add('active');
-                } else {
-                    el.classList.remove('active');
-                }
+            if (!self.config.background) {
+                Array.apply(null, self.calendarView.el.getElementsByClassName('day')).map(function (el) {
+                    if (el.getAttribute('data-year') == year && el.getAttribute('data-month') == month-1 && el.getAttribute('data-day') == day-1) {
+                        el.classList.add('active');
+                    } else {
+                        el.classList.remove('active');
+                    }
+                });
+                Array.apply(null, self.timeLineView.el.getElementsByClassName('hour')).map(function (el) {
+                    if (el.getAttribute('data-hour') == hour.replace(/h0?/, '')) {
+                        el.classList.add('active');
+                    } else {
+                        el.classList.remove('active');
+                    }
+                });
+            }
+
+            return onChange.apply(null, arguments).then(function (geojson) {
+                document.body.classList.remove('waiting');
+                return geojson;
+            }).catch(function (err) {
+                document.body.classList.remove('waiting');
+                return geojson;
             });
-            Array.apply(null, self.timeLineView.el.getElementsByClassName('hour')).map(function (el) {
-                if (el.getAttribute('data-hour') == hour.replace(/h0?/, '')) {
-                    el.classList.add('active');
-                } else {
-                    el.classList.remove('active');
-                }
-            });
-            onChange.apply(null, arguments);
         };
-        this.calendarView = new CalendarView(onInteractiveChange.bind(this));
-        this.calendarView.render();
-        this.calendarView.el.addEventListener("change", function (ev) {
-            self.onChange(
-                self.calendarView.model.date.year, 
-                self.calendarView.model.date.month+1, 
-                self.calendarView.model.date.day+1,
-                self.timeLineView.model.hour
-            );
+        
+        this.calendarView = new CalendarView(onInteractiveChange.bind(this), this.config);
+        this.timeLineView = new TimeLineView(onInteractiveChange.bind(this), this.config);
+
+        if (!this.config.background) {
+            this.calendarView.render();
+            this.timeLineView.render();
+
+            this.calendarView.el.addEventListener("change", function (ev) {
+                self.onChange(
+                    self.calendarView.model.date.year, 
+                    self.calendarView.model.date.month+1, 
+                    self.calendarView.model.date.day+1,
+                    self.timeLineView.model.hour
+                );
+            });
+        }
+
+        this.animation = false;
+        document.getElementById("animate").addEventListener("click", function (ev) {
+            onAnimationChange.call(self, !self.animation, ev.currentTarget);
         });
-        this.timeLineView = new TimeLineView(onInteractiveChange.bind(this));
-        this.timeLineView.render();
+
         this.timeLineView.el.addEventListener("change", function (ev) {
             if (ev.detail.type == "day") {
                 if (ev.detail.direction == "forward") {
@@ -1293,32 +1415,50 @@ module.exports = (function () {
                 );
             }
         });
-
-        this.animation = false;
-        document.getElementById("animate").addEventListener("click", function (ev) {
-            onAnimationChange.call(self, !self.animation, ev.currentTarget);
-        });
     }
 
     DateTime.prototype.start = function start () {
         var self = this;
-        var hour, date;
-        interval = setInterval(function () {
-            hour = self.timeLineView.model.next();
-            if (hour == 'h01') {
-                date = self.calendarView.model.next();
-            } else {
-                date = self.calendarView.model.date;
-            }
+        var hour, date, init, delta;
 
-            self.onChange(date.year, Number(date.month)+1, date.day+1, hour);
-        }, 1000);
+        function next () {
+            init = new Date();
+            new Promise(function (res, rej) {
+                if (self.throttleResolver) {
+                    self.throttleResolver = false;
+                    res();
+                    return;
+                }
+                hour = self.timeLineView.model.next();
+                if (hour == 'h01') {
+                    date = self.calendarView.model.next();
+                } else {
+                    date = self.calendarView.model.date;
+                }
+
+                self.onChange(date.year, Number(date.month)+1, date.day+1, hour).then(function () {
+                    if (self.config.background) {
+                        next();
+                    } else {
+                        delta = new Date() - init;
+                        if (delta < 500) {
+                            setTimeout(next, 500 - delta);
+                        }
+                    }
+                });
+            });
+        }
+
+        next();
+
+        if (this.config.background) return;
+
         document.getElementById('canvas').classList.add('blocked');
     }
 
     DateTime.prototype.stop = function stop () {
         document.getElementById('canvas').classList.remove('blocked');
-        clearInterval(interval);
+        this.throttleResolver = true;
     }
 
     return DateTime;
@@ -1328,11 +1468,14 @@ var TimeLineModel = require('../models/timeline.js');
 
 module.exports = (function () {
     
-    function TimeLine (onClick) {
+    function TimeLine (onClick, config) {
         var self = this;
         this.onClick = onClick;
         this.model = new TimeLineModel(this);
         this.el = document.getElementById('timeline');
+
+        if (config.background) return this;
+
         this.el.innerHTML = '<div class="timeline__content"></div>';
 
         var timelineBody = this.el.children[0];
