@@ -25,6 +25,18 @@ def html (file_path, status="200 OK", context={}):
 
 # @cache_control
 @access_control
+def js (file_path, status="200 OK", context={}):
+    if path.exists(file_path):
+        context = render_context(context)
+    else:
+        raise NotFound('Could not find ' + file_path)
+
+    with open(file_path) as file:
+        return Response([file.read()], status=status, mimetype="text/javascript")
+
+
+# @cache_control
+@access_control
 def json_file (file_path, status="200 OK", context={}):
     if not path.exists(file_path):
         raise NotFound('Could not find ' + file_path)
