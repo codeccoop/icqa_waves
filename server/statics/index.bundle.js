@@ -841,7 +841,6 @@ var DateTime = require('./views/datetime.js');
 
 window.CACHE_NAME = 'icqawaves';
 
-debugger;
 if (location.protocol !== 'https:' && (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1')) {
     location = 'https://' + location.host;
 }
