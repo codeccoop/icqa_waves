@@ -24,9 +24,11 @@ exports.request = function request (URL, callback, fallback) {
                                         window.caches.open(window.CACHE_NAME).then(function (cache) {
                                             cache.put(URL, res);
                                             cache.match(URL).then(function (req) {
-                                                req.json().then(function (json) {
-                                                    callback(json);
-                                                });
+                                                if (req) {
+                                                    req.json().then(function (json) {
+                                                        callback(json);
+                                                    });
+                                                }
                                             });
                                         });
                                     });
@@ -41,9 +43,11 @@ exports.request = function request (URL, callback, fallback) {
                     window.caches.open(window.CACHE_NAME).then(function (cache) {
                         cache.put(URL, res);
                         cache.match(URL).then(function (req) {
-                            req.json().then(function (json) {
-                                callback(json);
-                            });
+                            if (req) {
+                                req.json().then(function (json) {
+                                    callback(json);
+                                });
+                            }
                         });
                     });
                 });
