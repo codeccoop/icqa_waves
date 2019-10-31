@@ -1,5 +1,4 @@
 exports.request = function request (URL, callback, fallback) {
-    // var ajax = new XMLHttpRequest();
     if (window.caches) {
         URL = location.protocol+'//'+location.host + URL;
         window.caches.open(window.CACHE_NAME).then(function (cache) {
@@ -21,22 +20,19 @@ exports.request = function request (URL, callback, fallback) {
                                     });
                                 } else {
                                     fetch(URL).then(function (res) {
-                                        window.caches.open(window.CACHE_NAME).then(function (cache) {
-                                            cache.put(URL, res);
-                                            cache.match(URL).then(function (req) {
-                                                if (req) {
-                                                    req.json().then(function (json) {
-                                                        callback(json);
-                                                    });
-                                                } else {
-                                                    callback({"type": "FeatureCollection", "features": []});
-                                                }
-                                            });
+                                        res.json().then(function (json) {
+                                            callback(json);
+                                        }).catch(function () {
+                                            callback({"type": "FeatureCollection", "features": []});
                                         });
+                                    }).catch(function () {
+                                        callback({"type": "FeatureCollection", "features": []});
                                     });
                                 }
                             });
                         });
+                    }).catch(function () {
+                        callback({"type": "FeatureCollection", "features": []});
                     });
                 }
             }).catch(function () {

@@ -722,7 +722,6 @@ Geojson2Three.prototype.clear = function () {
 module.exports = Geojson2Three;
 },{"../helpers.js":7,"./components/BBox.js":1,"./components/Coordinates.js":2,"./components/Projection.js":4,"./components/Scale.js":5}],7:[function(require,module,exports){
 exports.request = function request (URL, callback, fallback) {
-    // var ajax = new XMLHttpRequest();
     if (window.caches) {
         URL = location.protocol+'//'+location.host + URL;
         window.caches.open(window.CACHE_NAME).then(function (cache) {
@@ -744,22 +743,19 @@ exports.request = function request (URL, callback, fallback) {
                                     });
                                 } else {
                                     fetch(URL).then(function (res) {
-                                        window.caches.open(window.CACHE_NAME).then(function (cache) {
-                                            cache.put(URL, res);
-                                            cache.match(URL).then(function (req) {
-                                                if (req) {
-                                                    req.json().then(function (json) {
-                                                        callback(json);
-                                                    });
-                                                } else {
-                                                    callback({"type": "FeatureCollection", "features": []});
-                                                }
-                                            });
+                                        res.json().then(function (json) {
+                                            callback(json);
+                                        }).catch(function () {
+                                            callback({"type": "FeatureCollection", "features": []});
                                         });
+                                    }).catch(function () {
+                                        callback({"type": "FeatureCollection", "features": []});
                                     });
                                 }
                             });
                         });
+                    }).catch(function () {
+                        callback({"type": "FeatureCollection", "features": []});
                     });
                 }
             }).catch(function () {
