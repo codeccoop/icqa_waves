@@ -48,7 +48,7 @@ module.exports = (function () {
                     return geojson;
                 });
             } else {
-                return onChange();
+                return onChange.apply(null, arguments);
             }
         };
         

@@ -731,10 +731,11 @@ exports.request = function request (URL, callback, fallback, dryRun) {
                     // RETURN CACHED
                     if (!dryRun) {
                         req.json().then(function (json) {
-                            // console.log('[CACHE:Get]: ', URL);
+                            console.log('[CACHE:Get]: ', URL);
                             callback(json);
                         });
                     } else {
+                        console.log('[CACHE:Get]: ', URL);
                         callback();
                     }
                 } else {
@@ -1424,7 +1425,7 @@ module.exports = (function () {
                     return geojson;
                 });
             } else {
-                return onChange();
+                return onChange.apply(null, arguments);
             }
         };
         
