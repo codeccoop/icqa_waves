@@ -10,7 +10,8 @@ class Routes:
         if request.method == "OPTIONS":
             return res_options()
         elif request.method == "GET":
-            res = self.db.contours.find({
+            # res = self.db.contours.find({
+            res = self.db.contours.find_one({
                 "mesure": str(mesure),
                 "region": str(region),
                 "year": str(year),
@@ -19,7 +20,8 @@ class Routes:
                 "hour": str(hour)
             }, {"_id": False})
 
-            return json_res({"type": "FeatureCollection", "features": [doc["feature"] for doc in res]})
+            # return json_res({"type": "FeatureCollection", "features": [doc["feature"] for doc in res]})
+            return json_res(res["collection"] if res else {"type": "FeatureCollection", "features": []})
         else:
             return HTTPException("405 Method Not Allowed")
 

@@ -20,17 +20,26 @@ def run ():
         matches = re.search(r"contours\_([0-9]{4})\-([0-9]{1,2})\-([0-9]{1,2})\_([^\.]*)", file)
         try:
             data = json.load(open(join(directory, file)))
-            db.contours.insert_many([
-                {
-                    "mesure": "10",
-                    "region": "8",
-                    "year": matches.group(1),
-                    "month": matches.group(2),
-                    "day": matches.group(3),
-                    "hour": matches.group(4),
-                    "feature": feat
-                } for feat in data.get("features", [])
-            ])
+            # db.contours.insert_many([
+            #     {
+            #         "mesure": "10",
+            #         "region": "8",
+            #         "year": matches.group(1),
+            #         "month": matches.group(2),
+            #         "day": matches.group(3),
+            #         "hour": matches.group(4),
+            #         "feature": feat
+            #     } for feat in data.get("features", [])
+            # ])
+            db.contours.insert_one({
+                "mesure": "10",
+                "region": "8",
+                "year": matches.group(1),
+                "month": matches.group(2),
+                "day": matches.group(3),
+                "hour": matches.group(4),
+                "collection": data
+            })
             print(str(int(i/l*100)) + ' %  - ', file)
             i += 1
         except Exception as e:
