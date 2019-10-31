@@ -33,7 +33,7 @@ def json_file (file_path, status="200 OK", context={}):
         return Response([(file.read() % tuple(context.values())).encode("utf-8")], status=status, mimetype="application/json")
 
 
-# @cache_control
+@cache_control
 @access_control
 def json (data, status="200 OK"):
     json = (type(data) == str and data or jsons(data))

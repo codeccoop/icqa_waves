@@ -14,6 +14,8 @@ db = client.icqa_waves
 
 def run ():
     directory = "./data/contours/10/8"
+    i = 1
+    l = len(listdir(directory))
     for file in listdir(directory):
         matches = re.search(r"contours\_([0-9]{4})\-([0-9]{1,2})\-([0-9]{1,2})\_([^\.]*)", file)
         try:
@@ -29,7 +31,8 @@ def run ():
                     "feature": feat
                 } for feat in data.get("features", [])
             ])
-            print(file)
+            print(str(int(i/l*100)) + ' %  - ', file)
+            i += 1
         except Exception as e:
             print(e)
         

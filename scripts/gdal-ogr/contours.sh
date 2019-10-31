@@ -17,7 +17,7 @@ if [ -z "$max" ]; then
 fi
 
 range=$(echo "$max-$min" | bc -l)
-ratio=$(echo "$range/200" | bc -l)
+ratio=$(echo "$range/100" | bc -l)
 
 echo "FROM: $src_layer"
 echo "TO: $dst_layer"
