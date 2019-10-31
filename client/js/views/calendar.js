@@ -10,11 +10,11 @@ module.exports = (function () {
         this.el.innerHTML = '<div class="calendar__header"></div><div class="calendar__content"></div>';
 
         var timelineBody = this.el.children[1];
-        timelineBody.innerHTML = '<div class="calendar__nav backward" scale="month"><abbr title="navegació per mesos">&lsaquo;</abbr></div>' +
+        timelineBody.innerHTML = '<div class="calendar__nav backward" scale="month" disable><abbr title="navegació per mesos">&lsaquo;</abbr></div>' +
             '<div class="calendar__nav backward" scale="day"><abbr title="navegació per dies">&laquo;</abbr></div>' +
                 '<div class="calendar__days-wrapper"></div>' +
             '<div class="calendar__nav forward" scale="day"><abbr title="navegació per dies">&raquo;</abbr></div>' +
-            '<div class="calendar__nav forward" scale="month"><abbr title="navegació per mesos">&rsaquo;</abbr></div>';
+            '<div class="calendar__nav forward" scale="month" disable><abbr title="navegació per mesos">&rsaquo;</abbr></div>';
 
         this.el.addEventListener("change", function (ev) {
             if (ev.detail.type == "month") {

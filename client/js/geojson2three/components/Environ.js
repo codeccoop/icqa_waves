@@ -15,7 +15,7 @@ function Environ (options) {
     // this.camera.lookAt(0, 0, 0);
     // this.camera.position.set(0, 0, 0);
     this.camera.lookAt(0, 0, 0);
-    this.camera.position.set(0, -1200, 350);
+    this.camera.position.set(0, -2000, 750);
     // this.camera.rotation.set(1.0912611464767945, 0.8532622644955974, 0.05805808892611628);
     
     this.renderer = new THREE.WebGLRenderer({

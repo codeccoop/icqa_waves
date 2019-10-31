@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", function (ev) {
                 scales: {
                     relative: relative,
                     range: [0, 200],
-                    domain: [0, 120]
+                    domain: [50, 170]
                 }
             }).draw({
                 color: function (feature, ctxt) {
@@ -64,7 +64,8 @@ document.addEventListener("DOMContentLoaded", function (ev) {
     }
 
     function requestData (year, month, day, hour) {
-        var url = "/rest/contours/10/8/"+year+"/"+month+"/"+day+"/"+hour;
+        // var url = "/rest/contours/10/8/"+year+"/"+month+"/"+day+"/"+hour;
+        var url = "/rest/contours/10/8/"+year+"/1/"+day+"/"+hour;
         return request(url, function (geojson) {
             jsonToScene(geojson);
         });

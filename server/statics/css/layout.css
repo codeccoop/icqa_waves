@@ -288,6 +288,13 @@ body {
     font-family: "Times New Roman", Times, serif;
 }
 
+.calendar__nav[disabled],
+.timeline__nav[disabled] {
+    opacity: .5;
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
 .calendar__nav.backward,
 .timeline__nav.backward {
     text-indent: -2px;

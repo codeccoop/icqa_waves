@@ -178,7 +178,7 @@ function Environ (options) {
     // this.camera.lookAt(0, 0, 0);
     // this.camera.position.set(0, 0, 0);
     this.camera.lookAt(0, 0, 0);
-    this.camera.position.set(0, -1200, 350);
+    this.camera.position.set(0, -2000, 750);
     // this.camera.rotation.set(1.0912611464767945, 0.8532622644955974, 0.05805808892611628);
     
     this.renderer = new THREE.WebGLRenderer({
@@ -821,7 +821,7 @@ document.addEventListener("DOMContentLoaded", function (ev) {
                 scales: {
                     relative: relative,
                     range: [0, 200],
-                    domain: [0, 120]
+                    domain: [50, 170]
                 }
             }).draw({
                 color: function (feature, ctxt) {
@@ -846,7 +846,8 @@ document.addEventListener("DOMContentLoaded", function (ev) {
     }
 
     function requestData (year, month, day, hour) {
-        var url = "/rest/contours/10/8/"+year+"/"+month+"/"+day+"/"+hour;
+        // var url = "/rest/contours/10/8/"+year+"/"+month+"/"+day+"/"+hour;
+        var url = "/rest/contours/10/8/"+year+"/1/"+day+"/"+hour;
         return request(url, function (geojson) {
             jsonToScene(geojson);
         });
@@ -1124,11 +1125,11 @@ module.exports = (function () {
         this.el.innerHTML = '<div class="calendar__header"></div><div class="calendar__content"></div>';
 
         var timelineBody = this.el.children[1];
-        timelineBody.innerHTML = '<div class="calendar__nav backward" scale="month"><abbr title="navegació per mesos">&lsaquo;</abbr></div>' +
+        timelineBody.innerHTML = '<div class="calendar__nav backward" scale="month" disable><abbr title="navegació per mesos">&lsaquo;</abbr></div>' +
             '<div class="calendar__nav backward" scale="day"><abbr title="navegació per dies">&laquo;</abbr></div>' +
                 '<div class="calendar__days-wrapper"></div>' +
             '<div class="calendar__nav forward" scale="day"><abbr title="navegació per dies">&raquo;</abbr></div>' +
-            '<div class="calendar__nav forward" scale="month"><abbr title="navegació per mesos">&rsaquo;</abbr></div>';
+            '<div class="calendar__nav forward" scale="month" disable><abbr title="navegació per mesos">&rsaquo;</abbr></div>';
 
         this.el.addEventListener("change", function (ev) {
             if (ev.detail.type == "month") {
