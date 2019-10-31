@@ -845,6 +845,30 @@ if (location.protocol !== 'https:' && (location.hostname !== 'localhost' && loca
     location = 'https://' + location.host;
 }
 
+(function background () {
+    var dt;
+    function controller (year, month, day, hour) {
+        var url = "/rest/contours/10/8/"+year+"/1/"+day+"/"+hour;
+        var promise = new Promise(function (res, rej) {
+            request(url, function (geojson) {
+                res(geojson)
+            }, function (err) {
+                rej(err);
+            });
+        });
+        if (year == 2018 && month == 1 && day == 31 && hour == 'h24') {
+            dt.stop();
+        }
+        return promise;
+    }
+
+    dt = new DateTime(controller, {
+        background: true
+    });
+
+    dt.start();
+})();
+
 document.addEventListener("DOMContentLoaded", function (ev) {
     var resolution = 1;
     var relative = true;
@@ -955,30 +979,6 @@ document.addEventListener("DOMContentLoaded", function (ev) {
             jsonToScene(_data);
         });
     });
-
-    (function background () {
-        var dt;
-        function controller (year, month, day, hour) {
-            var url = "/rest/contours/10/8/"+year+"/1/"+day+"/"+hour;
-            var promise = new Promise(function (res, rej) {
-                request(url, function (geojson) {
-                    res(geojson)
-                }, function (err) {
-                    rej(err);
-                });
-            });
-            if (year == 2018 && month == 1 && day == 31 && hour == 'h24') {
-                dt.stop();
-            }
-            return promise;
-        }
-
-        dt = new DateTime(controller, {
-            background: true
-        });
-
-        dt.start();
-    })();
 
     document.body.addEventListener('click', function (ev) {
         if (document.body.classList.contains('waiting')) {
