@@ -1,77 +1,15 @@
-exports.request = function request (URL, callback, fallback, dryRun) {
-    dryRun = dryRun || false;
-    if (window.caches) {
-        URL = location.protocol+'//'+location.host + URL;
-        window.caches.open(window.CACHE_NAME).then(function (cache) {
-            cache.match(URL).then(function (req) {
-                if (req) {
-                    // RETURN CACHED
-                    if (!dryRun) {
-                        req.json().then(function (json) {
-                            console.log('[CACHE:Get]: ', URL);
-                            callback(json);
-                        });
-                    } else {
-                        console.log('[CACHE:Get]: ', URL);
-                        callback();
-                    }
-                } else {
-                    fetch(URL).then(function (res) {
-                        window.caches.open(window.CACHE_NAME).then(function (cache) {
-                            cache.put(URL, res);
-                            console.log('[CACHE:Cached]: ', URL);
-                            cache.match(URL).then(function (req) {
-                                if (req && !dryRun) {
-                                    // RETURN CACHED
-                                    req.json().then(function (json) {
-                                        callback(json);
-                                    });
-                                } else if (!dryRun) {
-                                    // WHEN NO CACHED AND NO DRY RUN
-                                    fetch(URL).then(function (res) {
-                                        res.json().then(function (json) {
-                                            callback(json);
-                                        }).catch(function () {
-                                            callback({"type": "FeatureCollection", "features": []});
-                                        });
-                                    }).catch(function () {
-                                        callback({"type": "FeatureCollection", "features": []});
-                                    });
-                                } else {
-                                    // DRAY RUN MODE
-                                    callback();
-                                }
-                            });
-                        });
-                    }).catch(function () {
-                        callback({"type": "FeatureCollection", "features": []});
-                    });
-                }
-            }).catch(function () {
-                console.log('[CACHE:Error]:', url);
-                fetch(URL).then(function (res) {
-                    window.caches.open(window.CACHE_NAME).then(function (cache) {
-                        cache.put(URL, res);
-                        cache.match(URL).then(function (req) {
-                            if (req) {
-                                !dryRun && req.json().then(function (json) {
-                                    callback(json);
-                                }) || callback();
-                            } else {
-                                callback({"type": "FeatureCollection", "features": []});
-                            }
-                        });
-                    });
-                });
-            });
-        });   
-    } else {
-        fetch(URL).then(function (res) {
-            res.json().then(function (json) {
-                callback({"type": "FeatureCollection", "features": []});
-            });
+exports.request = function request (URL, callback, fallback) {
+    fetch(URL).then(function (res) {
+        res.json().then(function (json) {
+            callback(json);
+        }).catch(function (err) {
+            console.error(err);
+            fallback({"type": "FeatureCollection", "features": []});
         });
-    }
+    }).catch(function (err) {
+        console.error(err);
+        fallback({"type": "FeatureCollection", "features": []});
+    });
 }
 
 exports.lerpColor = function lerpColor (colorScale, amount) {

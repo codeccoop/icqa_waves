@@ -721,80 +721,18 @@ Geojson2Three.prototype.clear = function () {
 
 module.exports = Geojson2Three;
 },{"../helpers.js":7,"./components/BBox.js":1,"./components/Coordinates.js":2,"./components/Projection.js":4,"./components/Scale.js":5}],7:[function(require,module,exports){
-exports.request = function request (URL, callback, fallback, dryRun) {
-    dryRun = dryRun || false;
-    if (window.caches) {
-        URL = location.protocol+'//'+location.host + URL;
-        window.caches.open(window.CACHE_NAME).then(function (cache) {
-            cache.match(URL).then(function (req) {
-                if (req) {
-                    // RETURN CACHED
-                    if (!dryRun) {
-                        req.json().then(function (json) {
-                            console.log('[CACHE:Get]: ', URL);
-                            callback(json);
-                        });
-                    } else {
-                        console.log('[CACHE:Get]: ', URL);
-                        callback();
-                    }
-                } else {
-                    fetch(URL).then(function (res) {
-                        window.caches.open(window.CACHE_NAME).then(function (cache) {
-                            cache.put(URL, res);
-                            console.log('[CACHE:Cached]: ', URL);
-                            cache.match(URL).then(function (req) {
-                                if (req && !dryRun) {
-                                    // RETURN CACHED
-                                    req.json().then(function (json) {
-                                        callback(json);
-                                    });
-                                } else if (!dryRun) {
-                                    // WHEN NO CACHED AND NO DRY RUN
-                                    fetch(URL).then(function (res) {
-                                        res.json().then(function (json) {
-                                            callback(json);
-                                        }).catch(function () {
-                                            callback({"type": "FeatureCollection", "features": []});
-                                        });
-                                    }).catch(function () {
-                                        callback({"type": "FeatureCollection", "features": []});
-                                    });
-                                } else {
-                                    // DRAY RUN MODE
-                                    callback();
-                                }
-                            });
-                        });
-                    }).catch(function () {
-                        callback({"type": "FeatureCollection", "features": []});
-                    });
-                }
-            }).catch(function () {
-                console.log('[CACHE:Error]:', url);
-                fetch(URL).then(function (res) {
-                    window.caches.open(window.CACHE_NAME).then(function (cache) {
-                        cache.put(URL, res);
-                        cache.match(URL).then(function (req) {
-                            if (req) {
-                                !dryRun && req.json().then(function (json) {
-                                    callback(json);
-                                }) || callback();
-                            } else {
-                                callback({"type": "FeatureCollection", "features": []});
-                            }
-                        });
-                    });
-                });
-            });
-        });   
-    } else {
-        fetch(URL).then(function (res) {
-            res.json().then(function (json) {
-                callback({"type": "FeatureCollection", "features": []});
-            });
+exports.request = function request (URL, callback, fallback) {
+    fetch(URL).then(function (res) {
+        res.json().then(function (json) {
+            callback(json);
+        }).catch(function (err) {
+            console.error(err);
+            fallback({"type": "FeatureCollection", "features": []});
         });
-    }
+    }).catch(function (err) {
+        console.error(err);
+        fallback({"type": "FeatureCollection", "features": []});
+    });
 }
 
 exports.lerpColor = function lerpColor (colorScale, amount) {
@@ -847,35 +785,22 @@ var { request, lerpColor } = require('./helpers.js');
 var DateTime = require('./views/datetime.js');
 
 
-window.CACHE_NAME = 'icqawaves';
-
 if (location.protocol !== 'https:' && (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1')) {
     location = 'https://' + location.host;
 }
 
-(function background () {
-    var dt;
-    function controller (year, month, day, hour) {
-        var url = "/rest/contours/10/8/"+year+"/1/"+day+"/"+hour;
-        var promise = new Promise(function (res, rej) {
-            request(url, function () {
-                res();
-            }, function (err) {
-                rej(err);
-            }, true);
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/statics/sw.js').then(function(registration) {
+            // Registration was successful
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        }, function(err) {
+            // registration failed :(
+            console.log('ServiceWorker registration failed: ', err);
         });
-        if (year == 2018 && month == 1 && day == 31 && hour == 'h24') {
-            dt.stop();
-        }
-        return promise;
-    }
-
-    dt = new DateTime(controller, {
-        background: true
     });
-
-    dt.start();
-})();
+}
+  
 
 document.addEventListener("DOMContentLoaded", function (ev) {
     var resolution = 1;
@@ -939,13 +864,13 @@ document.addEventListener("DOMContentLoaded", function (ev) {
     function requestData (year, month, day, hour) {
         document.body.classList.add('waiting');
         return new Promise(function (res, rej) {
-            // var url = "/rest/contours/10/8/"+year+"/"+month+"/"+day+"/"+hour;
             var url = "/rest/contours/10/8/"+year+"/1/"+day+"/"+hour;
             request(url, function (geojson) {
                 jsonToScene(geojson);
                 res(geojson);
-            }, function (err) {
-                rej(err);
+            }, function (geojson) {
+                jsonToScene(geojson);
+                rej(geojson);
             });
         });
     }
@@ -957,9 +882,15 @@ document.addEventListener("DOMContentLoaded", function (ev) {
             document.body.classList.add('ready');
             document.body.classList.remove("waiting");
         }
+    }).catch(function () {
+        ready[0] = true;
+        if (ready.reduce(function (a,d) { return a && d}, true)) {
+            document.body.classList.add('ready');
+            document.body.classList.remove("waiting");
+        }
     });
     
-    request('/rest/municipalities', function (geojson) {
+    function onMunicipalities (geojson) {
         new Geojson2Three(env)
         .data(geojson)
         .fitEnviron(null, {
@@ -978,7 +909,8 @@ document.addEventListener("DOMContentLoaded", function (ev) {
             document.body.classList.add('ready');
             document.body.classList.remove("waiting");
         }
-    });
+    }
+    request('/rest/municipalities', onMunicipalities, onMunicipalities);
 
     Array.apply(null, document.getElementById('scales').getElementsByClassName('scale')).map(function (el, i, els) {
         el.addEventListener('click', function (ev) {
@@ -990,14 +922,6 @@ document.addEventListener("DOMContentLoaded", function (ev) {
             jsonToScene(_data);
         });
     });
-
-    document.body.addEventListener('click', function (ev) {
-        if (document.body.classList.contains('waiting')) {
-            ev.stopImmediatePropagation();
-            ev.stopPropagation();
-            ev.preventDefault();
-        }
-    }, true);
 
     function clickOut (ev) {
         // ev.stopImmediatePropagation();
@@ -1020,6 +944,14 @@ document.addEventListener("DOMContentLoaded", function (ev) {
             document.body.addEventListener("click", clickOut, true);
         }
     });
+
+    document.body.addEventListener('click', function (ev) {
+        if (document.body.classList.contains('waiting')) {
+            ev.stopImmediatePropagation();
+            ev.stopPropagation();
+            ev.preventDefault();
+        }
+    }, true);
 
 
     document.getElementById('canvas').addEventListener('mousedown', function (ev) {
@@ -1420,7 +1352,7 @@ module.exports = (function () {
                 return onChange.apply(null, arguments).then(function (geojson) {
                     document.body.classList.remove('waiting');
                     return geojson;
-                }).catch(function (err) {
+                }).catch(function (geojson) {
                     document.body.classList.remove('waiting');
                     return geojson;
                 });

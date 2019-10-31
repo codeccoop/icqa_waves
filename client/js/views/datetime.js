@@ -43,7 +43,7 @@ module.exports = (function () {
                 return onChange.apply(null, arguments).then(function (geojson) {
                     document.body.classList.remove('waiting');
                     return geojson;
-                }).catch(function (err) {
+                }).catch(function (geojson) {
                     document.body.classList.remove('waiting');
                     return geojson;
                 });
