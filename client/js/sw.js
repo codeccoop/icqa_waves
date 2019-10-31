@@ -16,6 +16,11 @@ self.addEventListener('install', function (event) {
     );
 });
 
+self.addEventListener('activate', function (event) {
+    request(contours);
+});
+  
+
 self.addEventListener('fetch', function (event) {
     event.respondWith(
         caches.match(event.request)
@@ -63,15 +68,19 @@ Array.apply(null, Array(31)).map(function (d, i) {
 
 function request (urls) {
     var url = urls.shift();
-    fetch(url).then(function (res) {
-        caches.open(CACHE_NAME)
-        .then(function (cache) {
-            cache.put(event.request, res);
-            request(urls);
-        }).catch(function (err) {
-            request(urls);
+    url = location.protocol+'//'+location.host + url;
+    caches.open(CACHE_NAME).then(function (cache) {
+        cache.match(url).then(function (res) {
+            if (!res) {
+                fetch(url).then(function (res) {
+                    cache.put(event.request, res);
+                    request(urls);
+                }).catch(function (err) {
+                    request(urls);
+                }); 
+            } else {
+                request(urls);
+            }
         });
     });
 }
-
-request(contours);
