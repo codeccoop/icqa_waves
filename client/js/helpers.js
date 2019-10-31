@@ -28,6 +28,8 @@ exports.request = function request (URL, callback, fallback) {
                                                     req.json().then(function (json) {
                                                         callback(json);
                                                     });
+                                                } else {
+                                                    callback({"type": "FeatureCollection", "features": []});
                                                 }
                                             });
                                         });
@@ -47,6 +49,8 @@ exports.request = function request (URL, callback, fallback) {
                                 req.json().then(function (json) {
                                     callback(json);
                                 });
+                            } else {
+                                callback({"type": "FeatureCollection", "features": []});
                             }
                         });
                     });
@@ -56,7 +60,7 @@ exports.request = function request (URL, callback, fallback) {
     } else {
         fetch(URL).then(function (res) {
             res.json().then(function (json) {
-                callback(json);
+                callback({"type": "FeatureCollection", "features": []});
             });
         });
     }

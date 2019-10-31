@@ -751,6 +751,8 @@ exports.request = function request (URL, callback, fallback) {
                                                     req.json().then(function (json) {
                                                         callback(json);
                                                     });
+                                                } else {
+                                                    callback({"type": "FeatureCollection", "features": []});
                                                 }
                                             });
                                         });
@@ -770,6 +772,8 @@ exports.request = function request (URL, callback, fallback) {
                                 req.json().then(function (json) {
                                     callback(json);
                                 });
+                            } else {
+                                callback({"type": "FeatureCollection", "features": []});
                             }
                         });
                     });
@@ -779,7 +783,7 @@ exports.request = function request (URL, callback, fallback) {
     } else {
         fetch(URL).then(function (res) {
             res.json().then(function (json) {
-                callback(json);
+                callback({"type": "FeatureCollection", "features": []});
             });
         });
     }
@@ -836,6 +840,11 @@ var DateTime = require('./views/datetime.js');
 
 
 window.CACHE_NAME = 'icqawaves';
+
+debugger;
+if (location.protocol !== 'https:' && (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1')) {
+    location = 'https://' + location.host;
+}
 
 document.addEventListener("DOMContentLoaded", function (ev) {
     var resolution = 1;

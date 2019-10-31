@@ -6,6 +6,10 @@ var DateTime = require('./views/datetime.js');
 
 window.CACHE_NAME = 'icqawaves';
 
+if (location.protocol !== 'https:' && (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1')) {
+    location = 'https://' + location.host;
+}
+
 document.addEventListener("DOMContentLoaded", function (ev) {
     var resolution = 1;
     var relative = true;
