@@ -20,6 +20,7 @@ class App (BaseWsgiContainer, Routes, Fallbacks):
         return Map([
             # SERVER ENDPOINTS
             Rule('/', endpoint='index'),
+            Rule('/sw.js', endpoint='sw')
         ])
 
 

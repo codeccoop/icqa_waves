@@ -11,3 +11,10 @@ class Routes:
         else:
             error = request.method + " method isn't allowed"
             raise HTTPException(error, 405)
+
+    def on_sw (self, request):
+        if request.method == "GET":
+            return html(self.config["STATICS_DIR"] + '/sw.js')
+        else:
+            error = request.method + " method isn't allowed"
+            raise HTTPException(error, 405)
