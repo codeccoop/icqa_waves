@@ -39,15 +39,17 @@ module.exports = (function () {
                         el.classList.remove('active');
                     }
                 });
+                
+                return onChange.apply(null, arguments).then(function (geojson) {
+                    document.body.classList.remove('waiting');
+                    return geojson;
+                }).catch(function (err) {
+                    document.body.classList.remove('waiting');
+                    return geojson;
+                });
+            } else {
+                return onChange();
             }
-
-            return onChange.apply(null, arguments).then(function (geojson) {
-                document.body.classList.remove('waiting');
-                return geojson;
-            }).catch(function (err) {
-                document.body.classList.remove('waiting');
-                return geojson;
-            });
         };
         
         this.calendarView = new CalendarView(onInteractiveChange.bind(this), this.config);

@@ -15,11 +15,11 @@ if (location.protocol !== 'https:' && (location.hostname !== 'localhost' && loca
     function controller (year, month, day, hour) {
         var url = "/rest/contours/10/8/"+year+"/1/"+day+"/"+hour;
         var promise = new Promise(function (res, rej) {
-            request(url, function (geojson) {
-                res(geojson)
+            request(url, function () {
+                res();
             }, function (err) {
                 rej(err);
-            });
+            }, true);
         });
         if (year == 2018 && month == 1 && day == 31 && hour == 'h24') {
             dt.stop();
@@ -94,6 +94,7 @@ document.addEventListener("DOMContentLoaded", function (ev) {
     }
 
     function requestData (year, month, day, hour) {
+        document.body.classList.add('waiting');
         return new Promise(function (res, rej) {
             // var url = "/rest/contours/10/8/"+year+"/"+month+"/"+day+"/"+hour;
             var url = "/rest/contours/10/8/"+year+"/1/"+day+"/"+hour;
@@ -111,6 +112,7 @@ document.addEventListener("DOMContentLoaded", function (ev) {
         ready[0] = true;
         if (ready.reduce(function (a,d) { return a && d}, true)) {
             document.body.classList.add('ready');
+            document.body.classList.remove("waiting");
         }
     });
     
@@ -131,6 +133,7 @@ document.addEventListener("DOMContentLoaded", function (ev) {
         ready[1] = true;
         if (ready.reduce(function (a,d) { return a && d}, true)) {
             document.body.classList.add('ready');
+            document.body.classList.remove("waiting");
         }
     });
 
@@ -153,8 +156,31 @@ document.addEventListener("DOMContentLoaded", function (ev) {
         }
     }, true);
 
+    function clickOut (ev) {
+        // ev.stopImmediatePropagation();
+        // ev.stopPropagation();
+        var isIn = document.getElementById("info").contains(ev.srcElement) || document.getElementById("info") == ev.currentTarget;
+        if (!isIn) {
+            document.removeEventListener("click", clickOut);
+            document.getElementById("info").click();
+        }
+    }
+
+    document.getElementById('info').addEventListener('click', function (ev) {
+        ev.stopImmediatePropagation();
+        ev.stopPropagation();
+        if (ev.currentTarget.classList.contains("open")) {
+            ev.currentTarget.classList.remove("open");
+            document.body.removeEventListener("click", clickOut);
+        } else {
+            ev.currentTarget.classList.add("open");
+            document.body.addEventListener("click", clickOut, true);
+        }
+    });
+
+
     document.getElementById('canvas').addEventListener('mousedown', function (ev) {
-        if (ev.currentTarget.classList.contains('blocked')) {
+        if (ev.currentTarget.classList.contains('blocked') || document.body.classList.contains('waiting')) {
             ev.stopPropagation();
             ev.stopImmediatePropagation();
             ev.preventDefault();
@@ -162,7 +188,7 @@ document.addEventListener("DOMContentLoaded", function (ev) {
     }, true);
 
     document.getElementById('canvas').addEventListener('mousemove', function (ev) {
-        if (ev.currentTarget.classList.contains('blocked')) {
+        if (ev.currentTarget.classList.contains('blocked') || document.body.classList.contains('waiting')) {
             ev.stopPropagation();
             ev.stopImmediatePropagation();
             ev.preventDefault();

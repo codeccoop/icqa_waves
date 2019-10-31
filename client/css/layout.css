@@ -44,12 +44,28 @@ body.ready #welcome {
     width: 120px;
     height: 120px;
     animation: spin 2s linear infinite;
-  }
-  
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@media screen and (max-width: 1000px) {
+    #welcome .title {
+        font-size: 4rem;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    #welcome .title {
+        font-size: 3rem;
+    }
+}
 
 #canvas.blocked {
     /* pointer-events: none; */
@@ -108,6 +124,9 @@ body.ready #welcome {
     top: 25px;
     font-weight: 300;
     font-size: .75rem;
+    max-height: calc(100vh - 100px);
+    max-width: calc(100vw - 80px);
+    overflow: auto;
 }
 
 .info__content p {
@@ -119,7 +138,7 @@ body.ready #welcome {
     font-size: 1rem;
 }
 
-#info:hover .info__content {
+#info.open .info__content {
     display: block;
 }
 
@@ -211,21 +230,32 @@ body.ready #welcome {
     font-family: "Times New Roman", Times, serif;
 }
 
+@media screen and (max-width: 1000px) {
+    .animation-controls {
+        display: none;
+    }
+}
+
 @media screen and (max-width: 600px) {
+    #controls {
+        width: min-content;
+    }
+
     .time-controls {
         display: none;
     }
 
-    #animate {
-        border: none;
-    }
-
     .animation-controls {
+        display: flex;
         border: none;
         padding: 0;
         margin: 10px;
         height: auto;
         width: 100%;
+    }
+
+    #animate {
+        border: none;
     }
 }
 

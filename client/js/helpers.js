@@ -1,24 +1,32 @@
-exports.request = function request (URL, callback, fallback) {
+exports.request = function request (URL, callback, fallback, dryRun) {
+    dryRun = dryRun || false;
     if (window.caches) {
         URL = location.protocol+'//'+location.host + URL;
         window.caches.open(window.CACHE_NAME).then(function (cache) {
             cache.match(URL).then(function (req) {
                 if (req) {
-                    req.json().then(function (json) {
-                        // console.log('[CACHE:Get]: ', URL);
-                        callback(json);
-                    });
+                    // RETURN CACHED
+                    if (!dryRun) {
+                        req.json().then(function (json) {
+                            // console.log('[CACHE:Get]: ', URL);
+                            callback(json);
+                        });
+                    } else {
+                        callback();
+                    }
                 } else {
                     fetch(URL).then(function (res) {
                         window.caches.open(window.CACHE_NAME).then(function (cache) {
                             cache.put(URL, res);
                             console.log('[CACHE:Cached]: ', URL);
                             cache.match(URL).then(function (req) {
-                                if (req) {
+                                if (req && !dryRun) {
+                                    // RETURN CACHED
                                     req.json().then(function (json) {
                                         callback(json);
                                     });
-                                } else {
+                                } else if (!dryRun) {
+                                    // WHEN NO CACHED AND NO DRY RUN
                                     fetch(URL).then(function (res) {
                                         res.json().then(function (json) {
                                             callback(json);
@@ -28,6 +36,9 @@ exports.request = function request (URL, callback, fallback) {
                                     }).catch(function () {
                                         callback({"type": "FeatureCollection", "features": []});
                                     });
+                                } else {
+                                    // DRAY RUN MODE
+                                    callback();
                                 }
                             });
                         });
@@ -42,9 +53,9 @@ exports.request = function request (URL, callback, fallback) {
                         cache.put(URL, res);
                         cache.match(URL).then(function (req) {
                             if (req) {
-                                req.json().then(function (json) {
+                                !dryRun && req.json().then(function (json) {
                                     callback(json);
-                                });
+                                }) || callback();
                             } else {
                                 callback({"type": "FeatureCollection", "features": []});
                             }

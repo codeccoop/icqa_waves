@@ -721,27 +721,35 @@ Geojson2Three.prototype.clear = function () {
 
 module.exports = Geojson2Three;
 },{"../helpers.js":7,"./components/BBox.js":1,"./components/Coordinates.js":2,"./components/Projection.js":4,"./components/Scale.js":5}],7:[function(require,module,exports){
-exports.request = function request (URL, callback, fallback) {
+exports.request = function request (URL, callback, fallback, dryRun) {
+    dryRun = dryRun || false;
     if (window.caches) {
         URL = location.protocol+'//'+location.host + URL;
         window.caches.open(window.CACHE_NAME).then(function (cache) {
             cache.match(URL).then(function (req) {
                 if (req) {
-                    req.json().then(function (json) {
-                        // console.log('[CACHE:Get]: ', URL);
-                        callback(json);
-                    });
+                    // RETURN CACHED
+                    if (!dryRun) {
+                        req.json().then(function (json) {
+                            // console.log('[CACHE:Get]: ', URL);
+                            callback(json);
+                        });
+                    } else {
+                        callback();
+                    }
                 } else {
                     fetch(URL).then(function (res) {
                         window.caches.open(window.CACHE_NAME).then(function (cache) {
                             cache.put(URL, res);
                             console.log('[CACHE:Cached]: ', URL);
                             cache.match(URL).then(function (req) {
-                                if (req) {
+                                if (req && !dryRun) {
+                                    // RETURN CACHED
                                     req.json().then(function (json) {
                                         callback(json);
                                     });
-                                } else {
+                                } else if (!dryRun) {
+                                    // WHEN NO CACHED AND NO DRY RUN
                                     fetch(URL).then(function (res) {
                                         res.json().then(function (json) {
                                             callback(json);
@@ -751,6 +759,9 @@ exports.request = function request (URL, callback, fallback) {
                                     }).catch(function () {
                                         callback({"type": "FeatureCollection", "features": []});
                                     });
+                                } else {
+                                    // DRAY RUN MODE
+                                    callback();
                                 }
                             });
                         });
@@ -765,9 +776,9 @@ exports.request = function request (URL, callback, fallback) {
                         cache.put(URL, res);
                         cache.match(URL).then(function (req) {
                             if (req) {
-                                req.json().then(function (json) {
+                                !dryRun && req.json().then(function (json) {
                                     callback(json);
-                                });
+                                }) || callback();
                             } else {
                                 callback({"type": "FeatureCollection", "features": []});
                             }
@@ -846,11 +857,11 @@ if (location.protocol !== 'https:' && (location.hostname !== 'localhost' && loca
     function controller (year, month, day, hour) {
         var url = "/rest/contours/10/8/"+year+"/1/"+day+"/"+hour;
         var promise = new Promise(function (res, rej) {
-            request(url, function (geojson) {
-                res(geojson)
+            request(url, function () {
+                res();
             }, function (err) {
                 rej(err);
-            });
+            }, true);
         });
         if (year == 2018 && month == 1 && day == 31 && hour == 'h24') {
             dt.stop();
@@ -925,6 +936,7 @@ document.addEventListener("DOMContentLoaded", function (ev) {
     }
 
     function requestData (year, month, day, hour) {
+        document.body.classList.add('waiting');
         return new Promise(function (res, rej) {
             // var url = "/rest/contours/10/8/"+year+"/"+month+"/"+day+"/"+hour;
             var url = "/rest/contours/10/8/"+year+"/1/"+day+"/"+hour;
@@ -942,6 +954,7 @@ document.addEventListener("DOMContentLoaded", function (ev) {
         ready[0] = true;
         if (ready.reduce(function (a,d) { return a && d}, true)) {
             document.body.classList.add('ready');
+            document.body.classList.remove("waiting");
         }
     });
     
@@ -962,6 +975,7 @@ document.addEventListener("DOMContentLoaded", function (ev) {
         ready[1] = true;
         if (ready.reduce(function (a,d) { return a && d}, true)) {
             document.body.classList.add('ready');
+            document.body.classList.remove("waiting");
         }
     });
 
@@ -984,8 +998,31 @@ document.addEventListener("DOMContentLoaded", function (ev) {
         }
     }, true);
 
+    function clickOut (ev) {
+        // ev.stopImmediatePropagation();
+        // ev.stopPropagation();
+        var isIn = document.getElementById("info").contains(ev.srcElement) || document.getElementById("info") == ev.currentTarget;
+        if (!isIn) {
+            document.removeEventListener("click", clickOut);
+            document.getElementById("info").click();
+        }
+    }
+
+    document.getElementById('info').addEventListener('click', function (ev) {
+        ev.stopImmediatePropagation();
+        ev.stopPropagation();
+        if (ev.currentTarget.classList.contains("open")) {
+            ev.currentTarget.classList.remove("open");
+            document.body.removeEventListener("click", clickOut);
+        } else {
+            ev.currentTarget.classList.add("open");
+            document.body.addEventListener("click", clickOut, true);
+        }
+    });
+
+
     document.getElementById('canvas').addEventListener('mousedown', function (ev) {
-        if (ev.currentTarget.classList.contains('blocked')) {
+        if (ev.currentTarget.classList.contains('blocked') || document.body.classList.contains('waiting')) {
             ev.stopPropagation();
             ev.stopImmediatePropagation();
             ev.preventDefault();
@@ -993,7 +1030,7 @@ document.addEventListener("DOMContentLoaded", function (ev) {
     }, true);
 
     document.getElementById('canvas').addEventListener('mousemove', function (ev) {
-        if (ev.currentTarget.classList.contains('blocked')) {
+        if (ev.currentTarget.classList.contains('blocked') || document.body.classList.contains('waiting')) {
             ev.stopPropagation();
             ev.stopImmediatePropagation();
             ev.preventDefault();
@@ -1378,15 +1415,17 @@ module.exports = (function () {
                         el.classList.remove('active');
                     }
                 });
+                
+                return onChange.apply(null, arguments).then(function (geojson) {
+                    document.body.classList.remove('waiting');
+                    return geojson;
+                }).catch(function (err) {
+                    document.body.classList.remove('waiting');
+                    return geojson;
+                });
+            } else {
+                return onChange();
             }
-
-            return onChange.apply(null, arguments).then(function (geojson) {
-                document.body.classList.remove('waiting');
-                return geojson;
-            }).catch(function (err) {
-                document.body.classList.remove('waiting');
-                return geojson;
-            });
         };
         
         this.calendarView = new CalendarView(onInteractiveChange.bind(this), this.config);
