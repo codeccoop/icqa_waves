@@ -947,7 +947,7 @@ document.addEventListener("DOMContentLoaded", function (ev) {
     });
 
     document.body.addEventListener('click', function (ev) {
-        if (document.body.classList.contains('waiting')) {
+        if (document.body.classList.contains('waiting') && !document.getElementById('controls').contains(ev.srcElement)) {
             ev.stopImmediatePropagation();
             ev.stopPropagation();
             ev.preventDefault();
