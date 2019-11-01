@@ -41,10 +41,8 @@ module.exports = (function () {
                 });
                 
                 return onChange.apply(null, arguments).then(function (geojson) {
-                    document.body.classList.remove('waiting');
                     return geojson;
                 }).catch(function (geojson) {
-                    document.body.classList.remove('waiting');
                     return geojson;
                 });
             } else {
@@ -99,7 +97,7 @@ module.exports = (function () {
     DateTime.prototype.start = function start () {
         var self = this;
         var hour, date, init, delta;
-
+        
         function next () {
             init = new Date();
             new Promise(function (res, rej) {
@@ -122,6 +120,8 @@ module.exports = (function () {
                         delta = new Date() - init;
                         if (delta < 500) {
                             setTimeout(next, 500 - delta);
+                        } else {
+                            next();
                         }
                     }
                 });

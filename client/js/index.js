@@ -86,9 +86,11 @@ document.addEventListener("DOMContentLoaded", function (ev) {
             var url = "/rest/contours/10/8/"+year+"/1/"+day+"/"+hour;
             request(url, function (geojson) {
                 jsonToScene(geojson);
+                document.body.classList.remove("waiting");
                 res(geojson);
             }, function (geojson) {
                 jsonToScene(geojson);
+                document.body.classList.remove("waiting");
                 rej(geojson);
             });
         });
@@ -99,13 +101,11 @@ document.addEventListener("DOMContentLoaded", function (ev) {
         ready[0] = true;
         if (ready.reduce(function (a,d) { return a && d}, true)) {
             document.body.classList.add('ready');
-            document.body.classList.remove("waiting");
         }
     }).catch(function () {
         ready[0] = true;
         if (ready.reduce(function (a,d) { return a && d}, true)) {
             document.body.classList.add('ready');
-            document.body.classList.remove("waiting");
         }
     });
     
@@ -143,11 +143,12 @@ document.addEventListener("DOMContentLoaded", function (ev) {
     });
 
     function clickOut (ev) {
-        // ev.stopImmediatePropagation();
-        // ev.stopPropagation();
-        var isIn = document.getElementById("info").contains(ev.srcElement) || document.getElementById("info") == ev.currentTarget;
-        if (!isIn) {
-            document.removeEventListener("click", clickOut);
+        var isSelf = document.getElementById("info").id == ev.srcElement.id;
+        var isIn = document.getElementById("info").contains(ev.srcElement);
+        if (!isIn && !isSelf) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            ev.stopImmediatePropagation();
             document.getElementById("info").click();
         }
     }
@@ -157,7 +158,7 @@ document.addEventListener("DOMContentLoaded", function (ev) {
         ev.stopPropagation();
         if (ev.currentTarget.classList.contains("open")) {
             ev.currentTarget.classList.remove("open");
-            document.body.removeEventListener("click", clickOut);
+            document.body.removeEventListener("click", clickOut, true);
         } else {
             ev.currentTarget.classList.add("open");
             document.body.addEventListener("click", clickOut, true);
