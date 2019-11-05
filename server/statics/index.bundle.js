@@ -798,7 +798,15 @@ if ('serviceWorker' in navigator) {
             // registration failed :(
             console.log('ServiceWorker registration failed: ', err);
         });
+        this.navigator.serviceWorker.addEventListener("message", function (ev) {
+            if (ev.data.code == 200) {
+                document.getElementById("animate").classList.remove("loading");
+            }
+        });
     });
+} else {
+    document.getElementById("animate").classList.remove("loading");
+    document.getElementById("animate").classList.add("disabled");
 }
   
 
@@ -1317,9 +1325,9 @@ module.exports = (function () {
         var animate = el || document.getElementById('animate');
         if (run) {
             this.start();
-            animate.classList.add('active');
+            !this.animation && animate.classList.add('active');
         } else {
-            this.stop();
+            this.animation && this.stop();
             animate.classList.remove('active');
         }
         this.animation = run;

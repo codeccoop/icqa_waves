@@ -17,7 +17,15 @@ if ('serviceWorker' in navigator) {
             // registration failed :(
             console.log('ServiceWorker registration failed: ', err);
         });
+        this.navigator.serviceWorker.addEventListener("message", function (ev) {
+            if (ev.data.code == 200) {
+                document.getElementById("animate").classList.remove("loading");
+            }
+        });
     });
+} else {
+    document.getElementById("animate").classList.remove("loading");
+    document.getElementById("animate").classList.add("disabled");
 }
   
 

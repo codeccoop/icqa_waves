@@ -205,6 +205,26 @@ body.ready #welcome {
     position: relative;
 }
 
+#animate.disabled,
+#animate.loading {
+    box-shadow: 0px 0px 5px #ffffff22;
+    pointer-events: none;
+}
+
+#animate.disabled:after {
+    color: #ffffff55;
+    font-size: 25px;
+    content: "Disabled";
+    text-indent: -25px;
+}
+
+#animate.loading:after {
+    color: #ffffff55;
+    font-size: 25px;
+    content: "Loading...";
+    text-indent: -25px;
+}
+
 #animate:hover {
     background-color: #ffffff55;
 }

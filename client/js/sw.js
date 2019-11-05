@@ -10,17 +10,18 @@ self.addEventListener('install', function (event) {
         caches.open(CACHE_NAME)
         .then(function (cache) {
             console.log('Opened cache');
-            return cache.addAll(urlsToCache).then(_ => {
-                request(contours);
+            return cache.addAll(urlsToCache).then(function () {
+                return self.skipWaiting();
             });
-        }).then(function () {
-            
         })
     );
 });
 
 self.addEventListener('activate', function (event) {
+    console.log('Activated cache');
+    console.log('start request');
     request(contours);
+    event.waitUntil(self.clients.claim());
 });
   
 
@@ -68,9 +69,28 @@ Array.apply(null, Array(31)).map(function (d, i) {
         contours.push(urlTemplate.replace(/day/, day).replace(/hour/, hour));
     });
 });
+var contoursLen = contours.length;
 
 function request (urls) {
     var url = urls.shift();
+    console.log('urls: ', urls.length);
+    console.log('contours: ', contours.length);
+    if ((contoursLen - 48) >= urls.length) {
+        console.log('comunicating with client', self.WindowClient);
+        self.clients.matchAll({}).then(clients => {
+            var client;
+            for (let i=0,len=clients.length; i<len; i++) {
+                client = clients[i];
+                if (client.type == "window" && client.focused) {
+                    client.postMessage({
+                        "msg": "enogh cache to start animation",
+                        "code": 200
+                    });
+                }
+
+            }
+        });
+    }
     url = location.protocol+'//'+location.host + url;
     caches.open(CACHE_NAME).then(function (cache) {
         cache.match(url).then(function (res) {

@@ -7,9 +7,9 @@ module.exports = (function () {
         var animate = el || document.getElementById('animate');
         if (run) {
             this.start();
-            animate.classList.add('active');
+            !this.animation && animate.classList.add('active');
         } else {
-            this.stop();
+            this.animation && this.stop();
             animate.classList.remove('active');
         }
         this.animation = run;
