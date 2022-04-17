@@ -29,7 +29,6 @@ self.addEventListener("fetch", function (event) {
       }
 
       if (!event.request.url.match(/\/rest\/contours\//)) {
-        console.log("Avoid caching");
         return fetch(event.request);
       }
 

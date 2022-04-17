@@ -1,10 +1,12 @@
+from typing import Optional
 import requests as req
 from urllib.parse import urlencode
 from os.path import exists, isdir
 from os import makedirs
 import simplejson as json
-from time import sleep
-
+from datetime import datetime, timedelta
+import time
+import base64
 
 magnitudes = {
     # "SO2": 1,
@@ -16,31 +18,54 @@ magnitudes = {
     "PM10": 10
 }
 
-provinces = {
-    "Barcelona": 8
+comarques = {
+    "Barcelona": "13",
+    "Vallès Oriental": "41",
+    "Vallès Occidental": "40",
+    "Maresme": "21"
 }
-    
 
-def request (magnitude, province, year, month, day):
-    url_template = "https://analisi.transparenciacatalunya.cat/resource/uy6k-2s8r.geojson?"
+def request(magnitude: int, date: datetime,
+            credentials: bytes) -> Optional[dict]:  # comarca: int
+    # "https://analisi.transparenciacatalunya.cat/resource/qg74-87s9.json"
+    url_template = "https://analisi.transparenciacatalunya.cat/resource/tasf-thgu.geojson?"
+    # url_template = "https://analisi.transparenciacatalunya.cat/resource/uy6k-2s8r.geojson?"
     query_params = {
-        "dia": day,
-        "mes": month,
-        "any": year,
+        # "dia": day,
+        # "mes": month,
+        # "any": year,
         "magnitud": magnitude,
-        "provincia": province
+        "data": date.isoformat(),
+        # "provincia": province,
+        # "codi_comarca": comarca
     }
-    
+
     try:
-        res = req.get(url_template+urlencode(query_params))
-        return res.json()
+        url = url_template + urlencode(query_params)
+        token = base64.b64encode(credentials[:-1]).decode()
+        res = req.get(
+            url,
+            headers={
+                "Host": "analisi.transparenciacatalunya.cat",
+                "Accept": "application/json",
+                "Authorization": "Basic " + token,
+                # "X-App-Token": token
+            })
+        res = res.json()
+        if len(res.get("features", [])) > 0:
+            return res
+        else:
+            return None
     except Exception as e:
         print(e)
-        sleep(30)
-        request(magnitude, province, year, month, day)
-    
-    
-def write (magnitude, province, year, month, day, points):
+        time.sleep(30)
+        return request(magnitude=magnitude,
+                       # comarca=comarca,
+                       date=date,
+                       credentials=credentials)
+
+
+def write(points: dict, magnitude: int, date: datetime) -> None:  # comarca: int
     file_name = 'data'
     if not exists(file_name):
         makedirs(file_name)
@@ -48,34 +73,43 @@ def write (magnitude, province, year, month, day, points):
     file_name = file_name + '/vector'
     if not exists(file_name):
         makedirs(file_name)
-    
+
     file_name = file_name + '/' + str(magnitude)
     if not exists(file_name):
         makedirs(file_name)
-    
-    file_name = file_name + '/' + str(province)
-    if not exists(file_name):
-        makedirs(file_name)
-        
-    file_name = file_name + '/' + str(year) + '-' + str(month) + '-' + str(day)
+
+    # file_name = file_name + '/' + str(comarca)
+    # if not exists(file_name):
+    #     makedirs(file_name)
+
+    file_name = f"{file_name}/{date.year}-{date.month}-{date.day}"
     with open(file_name + '.geojson', 'w') as file:
         print('writing file ' + file_name + '.geojson')
         json.dump(points, file)
-        
-    
-def run ():
-    year = 2018
-    months = [i+1 for i in range(12)]
-    days = [i+1 for i in range(31)]
-    
-    for  province in provinces.values():
-        for magnitude in magnitudes.values():
-            for month in months:
-                for day in days:
-                    points = request(magnitude, province, year, month, day)
-                    write(magnitude, province, year, month, day, points)
-    
-       
+
+
+def run():
+    with open("token.txt", "rb") as conn:
+        credentials = conn.read()
+
+    for magnitude in magnitudes.values():
+        today = datetime.today()
+        today = today.replace(hour=0, minute=0, second=0, microsecond=0)
+        date = today.replace(year=today.year - 1)
+        while date != today:
+            points = request(magnitude=magnitude,
+                             date=date,
+                             # comarca=comarca,
+                             credentials=credentials)
+            if points:
+                write(points=points,
+                      magnitude=magnitude,
+                      # comarca=comarca,
+                      date=date)
+
+            date = date + timedelta(days=1)
+            time.sleep(1)
+
+
 if __name__ == '__main__':
     run()
-

@@ -12,6 +12,8 @@ data/*
 server/statics/*
 server/data/*
 client/data/*
+config/*
+client/node_modules/*
 
 # IDES
 .idea

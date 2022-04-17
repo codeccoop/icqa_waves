@@ -9,8 +9,8 @@ from server.web.app.modules.Fallbacks import Fallbacks
 
 class App (BaseWsgiContainer, Routes, Fallbacks):
 
-    def __init__ (self, **kwargs):
-        BaseWsgiContainer.__init__(self, **kwargs)
+    def __init__ (self, config):
+        BaseWsgiContainer.__init__(self, config)
 
         # MODULES INHERITANCE
         Routes.__init__(self)
@@ -24,5 +24,5 @@ class App (BaseWsgiContainer, Routes, Fallbacks):
         ])
 
 
-def init (settings):
-    return App(**settings)
+def init (config):
+    return App(config)

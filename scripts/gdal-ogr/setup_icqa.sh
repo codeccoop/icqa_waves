@@ -14,14 +14,13 @@ contours_path="${contours_path/vector/contours}"
 contours_layer="$contours_path/contours_$(echo "$src_name")_$(echo "$z_field").$(echo "$src_extension")"
 
 run () {
-
 	echo
 	echo "run interpolate.sh"
 	sh scripts/gdal-ogr/interpolate.sh "$src_layer" "$dst_layer" "$z_field"
 
 	echo
 	echo "run clip.sh"
-	sh scripts/gdal-ogr/clip.sh "$dst_layer" "$clipped_layer" "data/shp/epsg4326/municipis_amb.shp"
+	sh scripts/gdal-ogr/clip.sh "$dst_layer" "$clipped_layer" "data/shp/epsg4326/bcn_metropolis.shp"
 
 	echo
 	echo "run invert.sh"

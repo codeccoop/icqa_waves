@@ -1,20 +1,33 @@
+# BUILT-INS
+import os.path
+
+# VENDOR
 from werkzeug.wrappers import Response
-from werkzeug.exceptions import HTTPException
-from server.web.tools.responses import html, js
+from werkzeug.exceptions import MethodNotAllowed, NotFound
+from server.web.tools import responses
 
 
 class Routes:
 
-    def on_index (self, request):
-        if request.method == "GET":
-            return html(self.config["STATICS_DIR"] + '/index.html')
-        else:
-            error = request.method + " method isn't allowed"
-            raise HTTPException(error, 405)
+    config = dict()
 
-    def on_sw (self, request):
+    def on_index(self, request):
         if request.method == "GET":
-            return js(self.config["STATICS_DIR"] + '/sw.js')
+            try:
+                return responses.html(
+                    os.path.join(self.config["server"]["statics"],
+                                 'index.html'))
+            except:
+                raise NotFound
         else:
-            error = request.method + " method isn't allowed"
-            raise HTTPException(error, 405)
+            raise MethodNotAllowed
+
+    def on_sw(self, request):
+        if request.method == "GET":
+            try:
+                return responses.js(
+                    os.path.join(self.config["server"]["statics"], "sw.js"))
+            except:
+                raise NotFound
+        else:
+            raise MethodNotAllowed

@@ -1,0 +1,9 @@
+simplejson
+werkzeug
+gunicorn
+pymongo
+dnspython
+requests
+pyaml
+numpy
+gdal==3.0.4

@@ -11,21 +11,7 @@
 		<meta name="description" content="ICQA Waves is a visualization of BCN air polution in a 3D way" />
 		<meta name="keywords" content="ICQA, dataviz, opendata, BCN Open Data, Data World Viz Challenge, three.js" />
 		
-		<link href="/statics/css/reset.css" rel="stylesheet" type="text/css" />
-		<link href="/statics/css/layout.css" rel="stylesheet" type="text/css" />
-
 		<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,500,700&display=swap" rel="stylesheet">
-
-		<script src="/statics/vendor/three.min.js"></script>
-		<!-- <script src="vendor/trackball_controls.three.js"></script> -->
-		<script src="/statics/vendor/TrackballControls.js"></script>
-		<!-- <script src="vendor/Q3D.OrbitControls.js"></script> -->
-		<!-- <script src="vendor/OrbitControls.js"></script> -->
-		<!-- <script src="vendor/FirstPersonControls.js"></script> -->
-		<!-- <script src="vendor/DragControls.js"></script> -->
-		<!-- <script src="vendor/FlyControls.js"></script> -->
-		<!-- <script src="vendor/PointerLockControls.js"></script> -->
-		<!-- <script src="vendor/TransformControls.js"></script> -->
 	</head>
 	<body>
 		<div id="welcome">
@@ -34,15 +20,34 @@
 			<div class="spin-loader"></div>
 		</div>
 		<canvas id="canvas"></canvas>
-		<div id="scales">
-			<div class="scales__wrapper">
-				<div class="scales__title">ESCALES</div>
-				<div class="scales__scale scale active" data-value="relative">
+		<div id="selection">
+            <div class="magnitudes menu">
+                <div class="magnitudes__title title">CONTAMINANTS</div>
+                <div class="magnitudes__item item active" data-value="SO2">
+                    <abbr title="Diòxid de sofre">SO2</abbr></div>
+                <div class="magnitudes__item item" data-value="NO2">
+                    <abbr title="Diòxid de nitrogen">NO2</abbr></div>
+                <div class="magnitudes__item item" data-value="CO">
+                    <abbr title="Monòxid de carboni">CO</abbr></div>
+                <!-- <div class="magnitudes__item item" data-value="NO">
+                <abbr title="Òxid de nitrogen">NOx</abbr></div> -->
+                <div class="magnitudes__item item" data-value="O3">
+                    <abbr title="Ozó">O3</abbr></div>
+                <div class="magnitudes__item item" data-value="PM10">
+                    <abbr title="Micropartícules en supensió">PM10</abbr></div>
+            </div>
+			<div class="scales menu">
+				<div class="scales__title title">ESCALES</div>
+				<div class="scales__scale item active" data-value="absolute">
+					<abbr title="Escala de l'eix Z en funció de l'escala estandaritzada del ICQA">LÍMITS LEGALS</abbr></div>
+				<div class="scales__scale item" data-value="relative">
 					<abbr title="Escala de l'eix Z en funció als valors de les dades visibles">RELATIVA</abbr></div>
-				<div class="scales__scale scale" data-value="absolute">
-					<abbr title="Escala de l'eix Z en funció de l'escala estandaritzada del ICQA">ICQA</abbr></div>
-			</div>
+            </div>
 		</div>
+        <div id="legend">
+            <div class="legend__title">LLEGENDA</div>
+            <div class="legend__wrapper"></div>
+        </div>
 		<div id="info">
 			<div class="info__icon"></div>
 			<div class="info__content">
@@ -75,8 +80,8 @@
 				<div id="timeline"></div>
 				<div id="calendar"></div>
 			</div>
-			<div class="animation-controls"><div id="animate" class="loading"></div>
+			<div class="animation-controls"><div id="animate" class="loading"></div></div>
 		</div>
-		<script src="/statics/index.bundle.js"></script>
+		<script type="module" src="./src/index.js"></script>
 	</body>
 </html>

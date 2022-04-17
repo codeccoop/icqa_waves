@@ -1,0 +1,27 @@
+{
+  "name": "icqa_waves",
+  "version": "1.0.0",
+  "description": "Cient del portal ICQA Waves",
+  "main": "src/index.js",
+  "dependencies": {
+    "three": "^0.139.2"
+  },
+  "devDependencies": {
+    "vite": "^2.9.5",
+    "vite-plugin-pwa": "^0.11.13"
+  },
+  "scripts": {
+    "start": "vite",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/codeccoop/icqa_waves.git"
+  },
+  "author": "Còdec",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/codeccoop/icqa_waves/issues"
+  },
+  "homepage": "https://github.com/codeccoop/icqa_waves#readme"
+}

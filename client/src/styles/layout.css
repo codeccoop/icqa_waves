@@ -1,6 +1,11 @@
 body.waiting {
   cursor: wait;
-  /* pointer-events: none; */
+}
+
+body.waiting #info,
+body.waiting #controls,
+body.waiting #selection {
+  pointer-events: none;
 }
 
 #welcome {
@@ -170,6 +175,32 @@ body.ready #welcome {
   font-weight: bold;
 }
 
+#legend {
+  position: absolute;
+  left: 20px;
+  top: 260px;
+  color: white;
+}
+
+.legend__title {
+  border-bottom: 0.5px solid;
+  padding-right: 50px;
+  margin-bottom: 1rem;
+}
+
+.legend__bar {
+  height: 20px;
+  width: 195px;
+  border-radius: 10px;
+}
+
+.legend__labels {
+  padding: 0px 0.35em;
+  margin-top: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+}
+
 #controls {
   position: absolute;
   z-index: 10;
@@ -177,6 +208,7 @@ body.ready #welcome {
   right: 0px;
   bottom: 4%;
   width: 80%;
+  max-width: 1100px;
   margin: auto;
   color: white;
   box-shadow: 0px 0px 5px #ffffff88;
@@ -252,12 +284,6 @@ body.ready #welcome {
   content: "◼";
   text-indent: 5px;
   font-family: "Times New Roman", Times, serif;
-}
-
-@media screen and (max-width: 1000px) {
-  .animation-controls {
-    display: none;
-  }
 }
 
 @media screen and (max-width: 600px) {
@@ -388,6 +414,12 @@ body.ready #welcome {
   font-weight: bold;
 }
 
+.day.disabled,
+.hour.disabled {
+  pointer-events: none;
+  opacity: 0.3;
+}
+
 .calendar__nav,
 .timeline__nav {
   width: 40px;
@@ -403,8 +435,8 @@ body.ready #welcome {
   font-family: "Times New Roman", Times, serif;
 }
 
-.calendar__nav[disabled],
-.timeline__nav[disabled] {
+.calendar__nav.disabled,
+.timeline__nav.disabled {
   opacity: 0.5;
   pointer-events: none;
   cursor: not-allowed;
@@ -424,4 +456,3 @@ body.ready #welcome {
 .timeline__nav:hover {
   background-color: #ffffff55;
 }
-
