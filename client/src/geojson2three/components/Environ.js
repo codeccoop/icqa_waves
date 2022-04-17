@@ -1,4 +1,11 @@
-import { PerspectiveCamera, Scene, WebGLRenderer, DirectionalLight } from "three";
+import {
+  PerspectiveCamera,
+  Scene,
+  WebGLRenderer,
+  DirectionalLight,
+  Vector2,
+  Raycaster,
+} from "three";
 
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
@@ -50,6 +57,16 @@ function Environ(options) {
   light.position.set(x, y, z);
 
   window.addEventListener("resize", this.onResize.bind(this), false);
+
+  this.mouse = new Vector2();
+  this.raycaster = new Raycaster();
+  this.onPointerMove = this.onPointerMove.bind(this);
+  window.addEventListener("pointermove", this.onPointerMove);
+
+  this.tooltip = document.createElement("div");
+  this.tooltip.id = "tooltip";
+  this.tooltip.classList.add("hidden");
+  document.body.appendChild(this.tooltip);
 }
 
 Environ.prototype.render = function () {
@@ -68,6 +85,47 @@ Environ.prototype.onResize = function () {
   this.renderer.domElement.setAttribute("height", window.innerHeight);
   this.renderer.setSize(window.innerWidth, window.innerHeight);
   this.render();
+};
+
+const cache = {};
+Environ.prototype.onPointerMove = function onPointerMove(ev) {
+  this.mouse.x = (ev.clientX / window.innerWidth) * 2 - 1;
+  this.mouse.y = -(ev.clientY / window.innerHeight) * 2 + 1;
+  this.raycaster.setFromCamera(this.mouse.clone(), this.camera);
+  const intersections = this.raycaster
+    .intersectObjects(this.scene.children)
+    .filter(p => p.object.type === "Line");
+
+  Object.keys(cache).forEach(function (uuid, i, uuids) {
+    const objDesc = cache[uuid];
+    if (!intersections.map(p => p.object.uuid).includes(uuid)) {
+      objDesc.ref.material.color.setHex(objDesc.hexColor);
+      delete cache[uuid];
+    }
+  });
+
+  intersections.forEach(function (p) {
+    const object = p.object;
+    console.log(object);
+    cache[object.uuid] = cache[object.uuid] || {
+      ref: object,
+      hexColor: object.material.color.getHex(),
+    };
+    object.material.color.setHex(0xffff00);
+  });
+
+  if (intersections.length)
+    this.showTooltip(ev, intersections[0].object.userData.properties.icqa);
+  else this.tooltip.classList.add("hidden");
+
+  this.render();
+};
+
+Environ.prototype.showTooltip = function showTooltip(mouseEvent, text) {
+  this.tooltip.classList.remove("hidden");
+  this.tooltip.style.left = mouseEvent.clientX + 20 + "px";
+  this.tooltip.style.top = mouseEvent.clientY - 10 + "px";
+  this.tooltip.innerText = text;
 };
 
 export default Environ;

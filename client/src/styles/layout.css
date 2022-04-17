@@ -456,3 +456,15 @@ body.ready #welcome {
 .timeline__nav:hover {
   background-color: #ffffff55;
 }
+
+#tooltip {
+  position: fixed;
+  background-color: white;
+  border-radius: 5px;
+  box-shadow: 3px 3px 9px #000c;
+  padding: 1rem 1.6rem;
+}
+
+#tooltip.hidden {
+  display: none;
+}

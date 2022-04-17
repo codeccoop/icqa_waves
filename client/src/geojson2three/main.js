@@ -354,6 +354,7 @@ Geojson2Three.prototype.Point = function (sc, options, feature) {
 
   point.draw = () => this.scene.add(point);
 
+  point.userData = feature;
   return point;
 };
 
@@ -368,6 +369,7 @@ Geojson2Three.prototype.Line = function (sc, options, feature) {
 
   line.draw = () => this.scene.add(line);
 
+  line.userData = feature;
   return line;
 };
 
@@ -390,6 +392,7 @@ Geojson2Three.prototype.Polygon = function (sc, options, feature, scales) {
     this.scene.add(edges);
   };
 
+  polygon.userData = feature;
   return polygon;
 };
 

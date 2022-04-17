@@ -248,6 +248,23 @@ document.addEventListener("DOMContentLoaded", function (ev) {
     });
   });
 
+  Array.apply(
+    null,
+    document
+      .getElementById("selection")
+      .getElementsByClassName("scales")[0]
+      .getElementsByClassName("item")
+  ).forEach(function (el, i, els) {
+    el.addEventListener("click", function (ev) {
+      els.map(function (el) {
+        el.classList.remove("active");
+      });
+      el.classList.add("active");
+      relative = el.getAttribute("data-value") == "relative";
+      jsonToScene(_data);
+    });
+  });
+
   function clickOut(ev) {
     var isSelf = document.getElementById("info").id == ev.srcElement.id;
     var isIn = document.getElementById("info").contains(ev.srcElement);
