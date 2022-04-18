@@ -1,7 +1,6 @@
 # VENDOR
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 from werkzeug.middleware.shared_data import SharedDataMiddleware
-from pymongo import MongoClient
 
 # SOURCE
 from server.web.app import init as App

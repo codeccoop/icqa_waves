@@ -2,6 +2,7 @@
 *.*~
 *.qgz
 *.pyc
+*.pid
 
 # FOLDERS
 .venv

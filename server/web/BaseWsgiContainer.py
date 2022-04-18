@@ -1,11 +1,13 @@
 # BUILT-INS
+import sys
+import traceback
 import os.path
 from functools import lru_cache
 
 # VENDOR
 from werkzeug.wrappers import Request
 from werkzeug.routing import Map, Rule
-from werkzeug.exceptions import HTTPException, NotFound
+from werkzeug.exceptions import HTTPException, NotFound, InternalServerError
 
 # SOURCE
 from server.web.tools import responses
@@ -34,23 +36,25 @@ class BaseWsgiContainer(object):
             endpoint, values = adapter.match()
             return getattr(self, "on_" + endpoint)(request, **values)
         except HTTPException as e:
-            print(e)
-            if e.code is not None and e.code < 400:
-                return e
-            elif e.code is not None and e.code < 500:
-                return self.error_400({"status": e.code, "description": e.description})
-            else:
-                return self.error_500({"status": e.code, "description": e.description})
+            traceback.print_exc(file=sys.stdout)
+            raise e
+            # if e.code is not None and e.code < 400:
+            #     raise e
+            # elif e.code is not None and e.code < 500:
+            #     return self.error_400({"status": e.code, "description": e.description})
+            # else:
+            # return self.error_500({"status": e.code, "description": e.description})
         except Exception as e:
-            print(e)
-            return self.error_500(
-                {
-                    "code": 500,
-                    "description": "Unhandled Error: {!s}".format(
-                        e.args[0] if len(e.args) else e
-                    ).encode("utf-8"),
-                }
-            )
+            traceback.print_exc(file=sys.stdout)
+            raise InternalServerError()
+            # return self.error_500(
+            #     {
+            #         "code": 500,
+            #         "description": "Unhandled Error: {!s}".format(
+            #             e.args[0] if len(e.args) else e
+            #         ).encode("utf-8"),
+            #     }
+            # )
 
     def get_urls(self):
         return Map([Rule("/", endpoint="index")])
@@ -62,9 +66,13 @@ class BaseWsgiContainer(object):
             status="404 Not Found",
         )
 
+        return res
+
     def error_500(self, error):
         res = responses.html(
             os.path.join(self.config["server"]["statics"], "errors/500.html"),
             context=error,
             status="500 Not Found",
         )
+
+        return res

@@ -1,0 +1,56 @@
+#! /bin/bash
+
+cd "$(dirname "$(readlink -f $0)")"
+
+function help () {
+	echo "Usage: docker.sh [action] [env] [comand]"
+	echo "	action: build, up, down"
+	echo "	command: run, serve, interactive"
+}
+
+function down () {
+    is_running=$(docker ps -a | grep icqa_waves_1 | grep -Eo '^[^ ]+')
+    if ! [ -z "$is_running" ];
+    then
+        docker stop $is_running
+        docker rm $is_running
+    fi
+}
+
+function up () {
+	if [ "$1" == "run" ]
+	then
+		bind="-d"
+	else
+		bind="-it"
+	fi
+
+	if [ "$1" == "run" ] || [ "$1" == "serve" ] || [ "$1" == "interactive" ];
+	then
+        down
+		docker run $bind -v /var/log:/var/log -p 5000:5000 -p 8000:8000 --name icqa_waves_1 -h icqa_waves icqa_waves:latest $1
+	else
+		echo "ERROR: Unkown command $1"
+		help
+	fi
+}
+
+action=$1
+cmd=$2
+
+if [ "$action" == "-h" ] || [ "$action" == "--help" ];
+then
+	help
+elif [ "$action" == "build" ];
+then
+    docker build -t icqa_waves:latest .
+elif [ "$action" == "up" ];
+then
+	up $cmd
+elif [ "$action" == "down" ];
+then
+    down
+else
+	echo "ERROR: Unknown action $action"
+	help
+fi

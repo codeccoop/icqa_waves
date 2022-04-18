@@ -1,5 +1,10 @@
 pipeline {
-	agent { dockerfile true }
+	agent { 
+        dockerfile {
+            filename 'Dockerfile.agent'
+            dir "${params.DOCKERFILE_PATH}"
+        }
+    }
 
 	environment {
 		DADESCOMUNALS_USER = credentials("dadescomunals-user")
@@ -16,15 +21,15 @@ pipeline {
 					mv client.tar ../client.tar
 				'''
 				stash(name: 'client-dist', includes: 'client.tar', useDefaultExcludes: true)
-            		}
-        	}
+            }
+        }
 
 		stage('Deploy') {
 			when {
 				expression {
                 			currentBuild.result == null || currentBuild.result == 'SUCCESS' 
-              			}
-            		}
+              	}
+            }
 
 			steps {
 				withCredentials([sshUserPrivateKey(credentialsId: 'jenkins-server', keyFileVariable: 'KEY_FILE')]) {
@@ -32,7 +37,7 @@ pipeline {
 					sh '''
 						mkdir -p server/static
 						tar --strip-components=1 -C server/static -xvf client.tar
-						tar -cvf icqa.tar wsgi.py requirements.txt gunicorn.config.py run.sh config server/static server/web server/geo.py server/__init__.py
+						tar -cvf icqa.tar wsgi.py requirements.txt gunicorn.config.py run.sh config server Dockerfile .dockerignore docker-cli
 
 						mkdir -p .ssh
 						more ${KEY_FILE}
@@ -47,19 +52,12 @@ pipeline {
 							cd /opt/www/apps/icqa_waves
 
 							sudo tar -C . -xvf /home/${DADESCOMUNALS_USER}/icqa.tar
-							if [ -d .venv ];
-							then
-								sudo rm -rf .venv
-							fi
-
-							sudo virtualenv -p python3 .venv
-							sudo .venv/bin/pip install -r requirements.txt
-
-							sudo ./run.sh
+							sudo ./docker-cli build
+                            sudo ./docker-cli up run
 						EOF
 					'''.stripIndent()
 				}
 			}
 		}
-    	}
+    }
 }

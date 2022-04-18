@@ -1,5 +1,20 @@
-FROM node:14-alpine
+FROM mundialis/grass-py3-pdal:stable-ubuntu
 
-RUN apk update && apk add openssh
+RUN mkdir -p /opt/www/log
+COPY requirements.txt /opt/www
 
-EXPOSE 22
+RUN pip3 install -r /opt/www/requirements.txt
+
+COPY run.sh /opt/www
+COPY wsgi.py /opt/www
+COPY gunicorn.config.py /opt/www
+COPY server /opt/www/server
+COPY config /opt/www/config
+
+WORKDIR /opt/www
+
+EXPOSE 5000
+EXPOSE 8000
+
+ENTRYPOINT ["./run.sh"]
+CMD ["run"]
