@@ -1,0 +1,11 @@
+environment: "production"
+server:
+    debug: false
+    statics: "server/statics"
+    tmp: "/tmp"
+http:
+    ssl: true,
+    host: "dadescomunals.org"
+    base: "icqa_waves"
+soda:
+    credentials: "2y2mncm3uwv9i0629ri7rzqk1:5x49r82f604qdem2cr9hak8uaoae2vrqgpz1jc590f7oz4uj5h"

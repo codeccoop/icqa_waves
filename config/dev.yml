@@ -1,0 +1,10 @@
+server:
+    debug: True
+    statics: "server/statics"
+    tmp: "data/tmp"
+http:
+    ssl: False,
+    host: "localhost"
+    port: 8000
+soda:
+    credentials: "2y2mncm3uwv9i0629ri7rzqk1:5x49r82f604qdem2cr9hak8uaoae2vrqgpz1jc590f7oz4uj5h"

@@ -12,7 +12,6 @@ data/*
 server/statics/*
 server/data/*
 client/data/*
-config/*
 client/dist/*
 client/node_modules/*
 
