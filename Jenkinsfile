@@ -32,7 +32,7 @@ pipeline {
 					sh '''
 						mkdir -p server/static
 						tar --strip-components=1 -C server/static -xvf client.tar
-						tar -cvf icqa.tar wsgi.py requirements.txt server/static server/web server/geo.py server/__init__.py
+						tar -cvf icqa.tar wsgi.py requirements.txt gunicorn.config.py run.sh config server/static server/web server/geo.py server/__init__.py
 
 						mkdir -p .ssh
 						more ${KEY_FILE}
@@ -46,7 +46,7 @@ pipeline {
 						ssh -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" ${DADESCOMUNALS_USER}@dadescomunals.lan <<EOF
 							cd /opt/www/apps/icqa_waves
 
-							sudo tar -C . --strip-components=1 -xvf /home/${DADESCOMUNALS_USER}/icqa.tar
+							sudo tar -C . -xvf /home/${DADESCOMUNALS_USER}/icqa.tar
 							if [ -d .venv ];
 							then
 								sudo rm -rf .venv
