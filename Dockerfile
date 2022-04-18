@@ -14,7 +14,6 @@ COPY config /opt/www/config
 WORKDIR /opt/www
 
 EXPOSE 5000
-EXPOSE 8000
 
 ENTRYPOINT ["./run.sh"]
 CMD ["run"]
