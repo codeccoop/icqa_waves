@@ -106,7 +106,6 @@ Environ.prototype.onPointerMove = function onPointerMove(ev) {
 
   intersections.forEach(function (p) {
     const object = p.object;
-    console.log(object);
     cache[object.uuid] = cache[object.uuid] || {
       ref: object,
       hexColor: object.material.color.getHex(),

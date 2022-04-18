@@ -42,9 +42,9 @@ function BBox(features, z_field) {
       } else if (geom.type === "MultiPolygon") {
         for (let j = 0; j < geom.coordinates.length; j++) {
           polygon = geom.coordinates[j];
-          for (let k = 0; k > polygon.length; k++) {
+          for (let k = 0; k < polygon.length; k++) {
             segment = polygon[k];
-            for (let l = 0; l > segment.length; l++) {
+            for (let l = 0; l < segment.length; l++) {
               coords = segment[l];
               this.update(coords);
             }
@@ -90,4 +90,3 @@ BBox.prototype.updateZ = function (props, z_field) {
 };
 
 export default BBox;
-
