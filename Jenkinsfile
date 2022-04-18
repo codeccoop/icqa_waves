@@ -41,7 +41,7 @@ pipeline {
 						chmod 600 ./key_key.key
 						ssh-add ./key_key.key
 
-						scp -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" hemeroteca.tar ${DADESCOMUNALS_USER}@dadescomunals.lan:icqa.tar
+						scp -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" icqa.tar ${DADESCOMUNALS_USER}@dadescomunals.lan:icqa.tar
 
 						ssh -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" ${DADESCOMUNALS_USER}@dadescomunals.lan <<EOF
 							cd /opt/www/apps/icqa_waves
