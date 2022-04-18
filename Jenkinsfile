@@ -30,9 +30,9 @@ pipeline {
 				withCredentials([sshUserPrivateKey(credentialsId: 'jenkins-server', keyFileVariable: 'KEY_FILE')]) {
 					unstash 'client-dist'
 					sh '''
-						mkdir -p server/src/server/static
-						tar --strip-components=1 -C server/src/server/static -xvf client.tar
-						tar -cvf hemeroteca.tar server/main.py server/requirements.txt server/run.sh server/src
+						mkdir -p server/static
+						tar --strip-components=1 -C server/static -xvf client.tar
+						tar -cvf icqa.tar wsgi.py requirements.txt server/static server/web server/geo.py server/__init__.py
 
 						mkdir -p .ssh
 						more ${KEY_FILE}
@@ -41,12 +41,12 @@ pipeline {
 						chmod 600 ./key_key.key
 						ssh-add ./key_key.key
 
-						scp -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" hemeroteca.tar ${DADESCOMUNALS_USER}@dadescomunals.lan:hemeroteca.tar
+						scp -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" hemeroteca.tar ${DADESCOMUNALS_USER}@dadescomunals.lan:icqa.tar
 
 						ssh -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" ${DADESCOMUNALS_USER}@dadescomunals.lan <<EOF
-							cd /opt/www/apps/hemeroteca-oberta
+							cd /opt/www/apps/icqa_waves
 
-							sudo tar -C . --strip-components=1 -xvf /home/${DADESCOMUNALS_USER}/hemeroteca.tar
+							sudo tar -C . --strip-components=1 -xvf /home/${DADESCOMUNALS_USER}/icqa.tar
 							if [ -d .venv ];
 							then
 								sudo rm -rf .venv

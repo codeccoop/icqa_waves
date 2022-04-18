@@ -14,14 +14,14 @@ class WSGI(object):
         app = App(config)
         api = Api(config)
 
-        self.wsgi = DispatcherMiddleware(self.wsgi, {"/rest": api, "/app": app})
-
         self.wsgi = SharedDataMiddleware(
             self.wsgi,
-            {"/": config["server"]["statics"]},
+            {"/public": config["server"]["statics"]},
             cache=not config["server"]["debug"],
             cache_timeout=(0 if config["server"]["debug"] else 60 * 60 * 12),
         )
+
+        self.wsgi = DispatcherMiddleware(self.wsgi, {"/rest": api, "/app": app})
 
         self.cli = HttpClient(config["soda"])
 

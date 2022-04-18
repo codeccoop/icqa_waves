@@ -224,11 +224,7 @@ document.addEventListener("DOMContentLoaded", function (ev) {
       document.body.classList.remove("waiting");
     }
   }
-  request(
-    `${import.meta.env.VITE_ICQA_API}/municipalities`,
-    onMunicipalities,
-    onMunicipalities
-  );
+  request("municipalities.json", onMunicipalities, onMunicipalities);
 
   Array.apply(
     null,
