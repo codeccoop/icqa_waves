@@ -173,12 +173,12 @@ export default (function () {
 
     if (this.config.background) return;
 
-    document.getElementById("canvas").classList.add("blocked");
+    // document.getElementById("canvas").classList.add("blocked");
     document.getElementById("animate").classList.add("active");
   };
 
   DateTime.prototype.stop = function stop() {
-    document.getElementById("canvas").classList.remove("blocked");
+    // document.getElementById("canvas").classList.remove("blocked");
     document.getElementById("animate").classList.remove("active");
     this.throttleResolver = true;
     this.animation = false;
