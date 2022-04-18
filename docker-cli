@@ -28,7 +28,7 @@ function up () {
 	if [ "$1" == "run" ] || [ "$1" == "serve" ] || [ "$1" == "interactive" ];
 	then
         down
-		docker run $bind -v /var/log:/var/log -p 5050:5000 -p 8000:8000 --name icqa_waves_1 -h icqa_waves icqa_waves:latest $1
+		docker run $bind -v /var/log:/var/log -p 5050:5000 --name icqa_waves_1 -h icqa_waves icqa_waves:latest $1
 	else
 		echo "ERROR: Unkown command $1"
 		help
