@@ -1,6 +1,6 @@
 server:
     debug: True
-    statics: "server/statics"
+    statics: "server/static"
     tmp: "data/tmp"
 http:
     ssl: False,
